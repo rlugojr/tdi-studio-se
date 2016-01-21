@@ -30,7 +30,6 @@ import org.talend.component.core.constants.IElementParameterEventProperties;
 import org.talend.component.core.model.GenericElementParameter;
 import org.talend.component.core.utils.ComponentsUtils;
 import org.talend.component.ui.model.genericMetadata.GenericConnection;
-import org.talend.component.ui.model.genericMetadata.GenericConnectionItem;
 import org.talend.component.ui.wizard.i18n.Messages;
 import org.talend.component.ui.wizard.internal.IGenericWizardInternalService;
 import org.talend.component.ui.wizard.internal.service.GenericComponentServiceImpl;
@@ -73,19 +72,11 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
 
     private IGenericWizardInternalService internalService;
 
-    private boolean isWizard;
-
     public DynamicComposite(Composite parentComposite, int styles, EComponentCategory section, Element element,
             boolean isCompactView, Color backgroundColor, Form form) {
-        this(parentComposite, styles, section, element, isCompactView, backgroundColor, form, false);
-    }
-
-    public DynamicComposite(Composite parentComposite, int styles, EComponentCategory section, Element element,
-            boolean isCompactView, Color backgroundColor, Form form, boolean isWizard) {
         super(parentComposite, styles, section, element, isCompactView, backgroundColor);
         this.element = element;
         this.form = form;
-        this.isWizard = isWizard;
         checker = new Checker();
         internalService = new GenericWizardInternalService();
     }
@@ -102,7 +93,7 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
 
     public List<ElementParameter> resetParameters() {
         ComponentService genericComponentService = new GenericComponentServiceImpl(internalService.getComponentService(),
-                (GenericConnectionItem) connectionItem);
+                connectionItem);
         List<ElementParameter> parameters = ComponentsUtils.getParametersFromForm(element, null, form, null, null);
         for (ElementParameter parameter : parameters) {
             if (parameter instanceof GenericElementParameter) {
@@ -301,10 +292,6 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
 
     public void setConnectionItem(ConnectionItem connectionItem) {
         this.connectionItem = connectionItem;
-    }
-
-    public boolean isWizard() {
-        return this.isWizard;
     }
 
 }

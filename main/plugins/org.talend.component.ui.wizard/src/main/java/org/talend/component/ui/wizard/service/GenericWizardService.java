@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.talend.component.core.constants.IComponentConstants;
 import org.talend.component.core.model.GenericElementParameter;
@@ -27,10 +29,13 @@ import org.talend.component.core.utils.ComponentsUtils;
 import org.talend.component.ui.model.genericMetadata.GenericMetadataPackage;
 import org.talend.component.ui.wizard.internal.IGenericWizardInternalService;
 import org.talend.component.ui.wizard.internal.service.GenericWizardInternalService;
+import org.talend.component.ui.wizard.model.FakeElement;
 import org.talend.component.ui.wizard.persistence.SchemaUtils;
 import org.talend.component.ui.wizard.ui.DynamicComposite;
 import org.talend.components.api.properties.ComponentProperties;
+import org.talend.components.api.properties.ComponentProperties.Deserialized;
 import org.talend.components.api.properties.presentation.Form;
+import org.talend.components.api.wizard.ComponentWizard;
 import org.talend.components.api.wizard.ComponentWizardDefinition;
 import org.talend.components.api.wizard.WizardImageType;
 import org.talend.core.model.metadata.builder.connection.Connection;
@@ -38,6 +43,7 @@ import org.talend.core.model.metadata.builder.connection.MetadataTable;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.Element;
 import org.talend.core.model.process.INode;
+import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.runtime.services.IGenericWizardService;
@@ -166,6 +172,32 @@ public class GenericWizardService implements IGenericWizardService {
             }
         }
         return dynamicComposite;
+    }
+
+    @Override
+    public Composite createDynamicCompositeForWizard(Composite container, ConnectionItem connectionItem, Form form) {
+        Element element = new FakeElement(form.getName());
+        DynamicComposite dynamicComposite = new DynamicComposite(container, SWT.H_SCROLL | SWT.V_SCROLL | SWT.NO_FOCUS,
+                EComponentCategory.BASIC, element, true, container.getBackground(), form);
+        dynamicComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
+        dynamicComposite.setConnectionItem(connectionItem);
+        dynamicComposite.resetParameters();
+        dynamicComposite.refresh();
+        return dynamicComposite;
+    }
+
+    @Override
+    public ComponentWizard getComponentWizard(String typeName, String compPropertiesStr, String location) {
+        ComponentWizard componentWizard = null;
+        if (StringUtils.isEmpty(compPropertiesStr)) { // create
+            componentWizard = internalService.getComponentWizard(typeName, location);
+        } else { // edit
+            Deserialized fromSerialized = ComponentProperties.fromSerialized(compPropertiesStr);
+            if (fromSerialized != null) {
+                componentWizard = internalService.getTopLevelComponentWizard(fromSerialized.properties, location);
+            }
+        }
+        return componentWizard;
     }
 
 }
