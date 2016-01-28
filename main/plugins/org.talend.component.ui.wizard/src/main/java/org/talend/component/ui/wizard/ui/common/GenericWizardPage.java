@@ -123,7 +123,7 @@ public abstract class GenericWizardPage extends WizardPage {
     }
 
     protected void addCheckListener(IChecker checker) {
-        ICheckListener checkListener = new ICheckListener() {
+        ICheckListener<IChecker> checkListener = new ICheckListener<IChecker>() {
 
             @Override
             public void checkPerformed(IChecker source) {

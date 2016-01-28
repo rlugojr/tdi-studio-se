@@ -16,6 +16,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -70,14 +71,25 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
 
     private ConnectionItem connectionItem;
 
+    private List<String> excludeParameterNames = new ArrayList<>();
+
     private IGenericWizardInternalService internalService;
 
     public DynamicComposite(Composite parentComposite, int styles, EComponentCategory section, Element element,
             boolean isCompactView, Color backgroundColor, Form form) {
+        this(parentComposite, styles, section, element, isCompactView, backgroundColor, form, null);
+    }
+
+    public DynamicComposite(Composite parentComposite, int styles, EComponentCategory section, Element element,
+            boolean isCompactView, Color backgroundColor, Form form, IChecker checker) {
         super(parentComposite, styles, section, element, isCompactView, backgroundColor);
         this.element = element;
         this.form = form;
-        checker = new Checker();
+        if (checker == null) {
+            this.checker = new Checker();
+        } else {
+            this.checker = checker;
+        }
         internalService = new GenericWizardInternalService();
     }
 
@@ -95,9 +107,15 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
         ComponentService genericComponentService = new GenericComponentServiceImpl(internalService.getComponentService(),
                 connectionItem);
         List<ElementParameter> parameters = ComponentsUtils.getParametersFromForm(element, null, form, null, null);
-        for (ElementParameter parameter : parameters) {
+        Iterator<ElementParameter> parametersIterator = parameters.iterator();
+        while (parametersIterator.hasNext()) {
+            ElementParameter parameter = parametersIterator.next();
             if (parameter instanceof GenericElementParameter) {
                 GenericElementParameter genericElementParameter = (GenericElementParameter) parameter;
+                if (excludeParameterNames != null && excludeParameterNames.contains(genericElementParameter.getName())) {
+                    parametersIterator.remove();
+                    continue;
+                }
                 genericElementParameter.setComponentService(genericComponentService);
                 genericElementParameter.callBeforePresent();
                 genericElementParameter.addPropertyChangeListener(this);
@@ -292,6 +310,14 @@ public class DynamicComposite extends MultipleThreadDynamicComposite implements 
 
     public void setConnectionItem(ConnectionItem connectionItem) {
         this.connectionItem = connectionItem;
+    }
+
+    public List<String> getExcludeParameterNames() {
+        return this.excludeParameterNames;
+    }
+
+    public void setExcludeParameterNames(List<String> excludeParameterNames) {
+        this.excludeParameterNames = excludeParameterNames;
     }
 
 }

@@ -35,6 +35,7 @@ import org.talend.component.ui.wizard.ui.DynamicComposite;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ComponentProperties.Deserialized;
 import org.talend.components.api.properties.presentation.Form;
+import org.talend.components.api.service.ComponentService;
 import org.talend.components.api.wizard.ComponentWizard;
 import org.talend.components.api.wizard.ComponentWizardDefinition;
 import org.talend.components.api.wizard.WizardImageType;
@@ -47,6 +48,7 @@ import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.runtime.services.IGenericWizardService;
+import org.talend.core.ui.check.IChecker;
 import org.talend.designer.core.model.components.ElementParameter;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.RepositoryNode;
@@ -64,9 +66,14 @@ public class GenericWizardService implements IGenericWizardService {
     }
 
     @Override
+    public ComponentService getComponentService() {
+        return internalService.getComponentService();
+    }
+
+    @Override
     public List<RepositoryNode> createNodesFromComponentService(RepositoryNode curParentNode) {
         List<RepositoryNode> repNodes = new ArrayList<>();
-        Set<ComponentWizardDefinition> wizardDefinitions = internalService.getComponentService().getTopLevelComponentWizards();
+        Set<ComponentWizardDefinition> wizardDefinitions = getComponentService().getTopLevelComponentWizards();
         for (ComponentWizardDefinition wizardDefinition : wizardDefinitions) {
             String name = wizardDefinition.getName();
             String displayName = wizardDefinition.getDisplayName();
@@ -84,7 +91,7 @@ public class GenericWizardService implements IGenericWizardService {
     @Override
     public List<String> getGenericTypeNames() {
         List<String> typeNames = new ArrayList<>();
-        Set<ComponentWizardDefinition> wizardDefinitions = internalService.getComponentService().getTopLevelComponentWizards();
+        Set<ComponentWizardDefinition> wizardDefinitions = getComponentService().getTopLevelComponentWizards();
         for (ComponentWizardDefinition wizardDefinition : wizardDefinitions) {
             typeNames.add(wizardDefinition.getName());
         }
@@ -115,8 +122,7 @@ public class GenericWizardService implements IGenericWizardService {
 
     @Override
     public Image getNodeImage(String typeName) {
-        InputStream imageStream = internalService.getComponentService().getWizardPngImage(typeName,
-                WizardImageType.TREE_ICON_16X16);
+        InputStream imageStream = getComponentService().getWizardPngImage(typeName, WizardImageType.TREE_ICON_16X16);
         if (imageStream == null) {
             return null;
         }
@@ -128,8 +134,7 @@ public class GenericWizardService implements IGenericWizardService {
 
     @Override
     public Image getWiardImage(String typeName) {
-        InputStream imageStream = internalService.getComponentService().getWizardPngImage(typeName,
-                WizardImageType.WIZARD_BANNER_75X66);
+        InputStream imageStream = getComponentService().getWizardPngImage(typeName, WizardImageType.WIZARD_BANNER_75X66);
         ImageData id = new ImageData(imageStream);
         Image image = new Image(null, id);
         return image;
@@ -175,12 +180,14 @@ public class GenericWizardService implements IGenericWizardService {
     }
 
     @Override
-    public Composite createDynamicCompositeForWizard(Composite container, ConnectionItem connectionItem, Form form) {
+    public Composite createDynamicCompositeForWizard(Composite container, ConnectionItem connectionItem, Form form,
+            IChecker checker, List<String> excludeParameterNames) {
         Element element = new FakeElement(form.getName());
         DynamicComposite dynamicComposite = new DynamicComposite(container, SWT.H_SCROLL | SWT.V_SCROLL | SWT.NO_FOCUS,
-                EComponentCategory.BASIC, element, true, container.getBackground(), form);
+                EComponentCategory.BASIC, element, true, container.getBackground(), form, checker);
         dynamicComposite.setLayoutData(new GridData(GridData.FILL_BOTH));
         dynamicComposite.setConnectionItem(connectionItem);
+        dynamicComposite.setExcludeParameterNames(excludeParameterNames);
         dynamicComposite.resetParameters();
         dynamicComposite.refresh();
         return dynamicComposite;

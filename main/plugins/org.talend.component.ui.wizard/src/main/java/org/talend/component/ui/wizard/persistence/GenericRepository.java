@@ -14,22 +14,17 @@ package org.talend.component.ui.wizard.persistence;
 
 import java.util.List;
 
-import org.talend.commons.exception.ExceptionHandler;
-import org.talend.commons.exception.PersistenceException;
 import org.talend.component.core.utils.SchemaUtils;
 import org.talend.component.ui.model.genericMetadata.GenericConnection;
-import org.talend.component.ui.model.genericMetadata.GenericConnectionItem;
 import org.talend.component.ui.model.genericMetadata.GenericMetadataFactory;
 import org.talend.component.ui.model.genericMetadata.SubContainer;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.schema.Schema;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.metadata.builder.connection.MetadataTable;
-import org.talend.core.model.properties.Item;
-import org.talend.core.model.properties.Property;
-import org.talend.core.model.repository.IRepositoryViewObject;
-import org.talend.core.repository.model.ProxyRepositoryFactory;
+import org.talend.core.model.properties.ConnectionItem;
+import org.talend.core.repository.persistence.AbstractRepository;
 import org.talend.cwm.helper.PackageHelper;
-import org.talend.repository.persistence.AbstractRepository;
 
 /**
  * created by ycbai on 2015年9月29日 Detailled comment
@@ -41,7 +36,7 @@ public class GenericRepository extends AbstractRepository {
     public String storeComponentProperties(ComponentProperties properties, String name, String repositoryLocation, Schema schema) {
         String serializedProperties = properties.toSerialized();
         if (repositoryLocation.contains(REPOSITORY_LOCATION_SEPARATOR)) {// nested properties to be
-            GenericConnectionItem item = getGenericConnectionItem(repositoryLocation.substring(0,
+            ConnectionItem item = getConnectionItem(repositoryLocation.substring(0,
                     repositoryLocation.indexOf(REPOSITORY_LOCATION_SEPARATOR)));
             if (item == null) {
                 throw new RuntimeException("Failed to find the GenericConnectionItem for location:" + repositoryLocation); //$NON-NLS-1$
@@ -64,15 +59,17 @@ public class GenericRepository extends AbstractRepository {
             }
             return repositoryLocation + REPOSITORY_LOCATION_SEPARATOR + name;
         } else {// simple properties to be set
-            GenericConnectionItem item = getGenericConnectionItem(repositoryLocation);
+            ConnectionItem item = getConnectionItem(repositoryLocation);
             if (item != null) {
-                GenericConnection connection = (GenericConnection) item.getConnection();
-                connection.setCompProperties(serializedProperties);
-                connection.getOwnedElement().clear();
-                return repositoryLocation + REPOSITORY_LOCATION_SEPARATOR;
-            } else {
-                throw new RuntimeException("Failed to find the GenericConnectionItem for location:" + repositoryLocation); //$NON-NLS-1$
+                Connection connection = item.getConnection();
+                if (connection instanceof GenericConnection) {
+                    GenericConnection gConnection = (GenericConnection) item.getConnection();
+                    gConnection.setCompProperties(serializedProperties);
+                    gConnection.getOwnedElement().clear();
+                    return repositoryLocation + REPOSITORY_LOCATION_SEPARATOR;
+                }
             }
+            throw new RuntimeException("Failed to find the GenericConnectionItem for location:" + repositoryLocation); //$NON-NLS-1$
         }
     }
 
@@ -111,31 +108,6 @@ public class GenericRepository extends AbstractRepository {
             }
         }
         return null;
-    }
-
-    /**
-     * DOC sgandon Comment method "getGenericConnectionItem".
-     * 
-     * @param repositoryLocation
-     * @return
-     */
-    private GenericConnectionItem getGenericConnectionItem(String repositoryLocation) {
-        GenericConnectionItem genItem = null;
-        try {
-            IRepositoryViewObject repViewObj = ProxyRepositoryFactory.getInstance().getLastVersion(repositoryLocation);
-            if (repViewObj != null) {
-                Property property = repViewObj.getProperty();
-                if (property != null) {
-                    Item item = property.getItem();
-                    if (item instanceof GenericConnectionItem) {
-                        genItem = (GenericConnectionItem) item;
-                    }
-                }
-            }
-        } catch (PersistenceException e) {
-            ExceptionHandler.process(e);
-        }
-        return genItem;
     }
 
 }
