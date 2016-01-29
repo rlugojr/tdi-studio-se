@@ -34,6 +34,7 @@ List<IMetadataTable> metadatas = node.getMetadataList();
 IMetadataTable metadata = null;
 List<IMetadataColumn> columnList = null;
 boolean hasDynamic = false;
+String dynamicColName = null;
 if ((metadatas != null) && (metadatas.size() > 0)) { // metadata
 
 	metadata = metadatas.get(0);
@@ -45,6 +46,7 @@ if ((metadatas != null) && (metadatas.size() > 0)) { // metadata
 		for (IMetadataColumn column : columnList) {
 			if (column.getTalendType().equals("id_Dynamic")) {
 				hasDynamic = true;
+				dynamicColName = column.getLabel();
 				break;
 			}
 		}
@@ -54,7 +56,18 @@ if ((metadatas != null) && (metadatas.size() > 0)) { // metadata
 
 org.talend.components.api.component.ComponentDefinition def_<%=cid %> =
    new <%= def.getClass().getName()%>();
-
+ 
+<%
+if(def instanceof org.talend.components.api.component.InputComponentDefinition){
+%>
+	org.talend.components.api.schema.column.type.TypeMapping.registryTypes(((org.talend.components.api.component.InputComponentDefinition)def_<%=cid%>).getTypesRegistry());
+<%
+}else if(def instanceof org.talend.components.api.component.OutputComponentDefinition){
+%>
+	org.talend.components.api.schema.column.type.TypeMapping.registryTypes(((org.talend.components.api.component.OutputComponentDefinition)def_<%=cid%>).getTypesRegistry());
+<%	
+}
+%>
 
 <%
 List<Component.CodegenPropInfo> propsToProcess = component.getCodegenPropInfos(componentProps);
@@ -79,7 +92,14 @@ for (Component.CodegenPropInfo propInfo : propsToProcess) { // propInfo
 	} // property
 } // propInfo
 %>
-
+<%
+if(def instanceof org.talend.components.api.component.ConnectionComponentDefinition){
+%>
+	org.talend.components.api.runtime.connection.ConnectionManager connManager_<%=cid%> = ((org.talend.components.api.component.ConnectionComponentDefinition)def_<%=cid%>).getConnectionManager();
+	globalMap.put("conn_<%=cid%>", connManager_<%=cid%>.getConnectionByKey("<%=cid%>", props_<%=cid%>));
+<%
+}
+%>
 org.talend.components.api.runtime.ComponentRuntimeContainer container_<%=cid %> = 
 <%
 	if (hasDynamic) {
@@ -101,79 +121,87 @@ org.talend.components.api.runtime.ComponentRuntimeContainer container_<%=cid %> 
     }
 };
 
-org.talend.components.api.runtime.ComponentRuntime runtime_<%=cid %> = def_<%=cid %>.createRuntime();
-runtime_<%=cid %>.setContainer(container_<%=cid %>);
-
 <%
 if(metadata != null){
-	if (component.canStart()) { // canStart
-	// Input
-%>
-		runtime_<%=cid %>.inputBegin(props_<%=cid %>);
-<%
+	if(def instanceof org.talend.components.api.component.InputComponentDefinition){
+	%>
+		org.talend.components.api.runtime.input.Source source_<%=cid%> = ((org.talend.components.api.component.InputComponentDefinition)def_<%=cid%>).getInputRuntime();
+		source_<%=cid%>.init(props_<%=cid%>);
+		org.talend.components.api.runtime.input.Reader recordReader_<%=cid%> = source_<%=cid%>.getRecordReader(new org.talend.components.api.runtime.input.SingleSplit());
+		java.util.List<org.talend.components.api.schema.SchemaElement> fields_<%=cid%> = recordReader_<%=cid%>.getSchema();
+		java.util.Map<String, org.talend.components.api.schema.internal.DataSchemaElement> fieldsMap_<%=cid%> = new java.util.HashMap<String, org.talend.components.api.schema.internal.DataSchemaElement>();
+		for(org.talend.components.api.schema.SchemaElement field_<%=cid%> : fields_<%=cid%>){
+			fieldsMap_<%=cid%>.put(field_<%=cid%>.getName(), (org.talend.components.api.schema.internal.DataSchemaElement)field_<%=cid%>);
+		}
+		<%
+		//TODO consider to move dynamic into Source/Reader after avro schema?
+		if(hasDynamic){
+		%>
+			routines.system.Dynamic dynamic_<%=cid%> = new routines.system.Dynamic();
+			org.talend.components.api.schema.internal.DataSchemaElement dynamicSchemaElement_<%=cid%> = fieldsMap_<%=cid%>.get("<%=dynamicColName%>");
+			for(org.talend.components.api.schema.SchemaElement childDynamic_<%=cid%> : dynamicSchemaElement_<%=cid%>.getChildren()){
+				routines.system.DynamicMetadata dynamicMetadata_<%=cid%> = new routines.system.DynamicMetadata();
+		    	dynamicMetadata_<%=cid%>.setName(childDynamic_<%=cid%>.getName());
+		    	dynamicMetadata_<%=cid%>.setDbName(childDynamic_<%=cid%>.getName());
+		    	String talendType_<%=cid%> = null;
+		    	//TODO finish the mapping
+		    	if(childDynamic_<%=cid%>.getType() == org.talend.components.api.schema.SchemaElement.Type.STRING){
+		    		talendType_<%=cid%> = "String";
+		    	}
+		    	dynamicMetadata_<%=cid%>.setType("id_" + talendType_<%=cid%>);
+		    	dynamic_<%=cid%>.metadatas.add(dynamicMetadata_<%=cid%>);
+			} 
+		<%
+		}
 		List<? extends IConnection> outgoingConns = node.getOutgoingSortedConnections();
-		if (outgoingConns.size() > 0) { // outgoing size
+		if(outgoingConns.size() > 0){ // outgoing size
 			// FIXME - multiple outgoing connections?
 			IConnection outgoingConn = outgoingConns.get(0);
-			if (outgoingConn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) { // outgoingConn 
-%>
-		
-				java.util.Map<String, Object> row_<%=cid %>;
-				Object value_<%=cid %>;
-				while ((row_<%=cid %> = runtime_<%=cid %>.inputRow()) != null) { // while (ends in component_end)
-<%
-					for (IMetadataColumn column : columnList) { // column
+			if(outgoingConn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)){ // outgoingConn 
+			%>
+				while(recordReader_<%=cid%>.advance()){
+					<%
+					if(hasDynamic){
+					%>
+						dynamic_<%=cid%>.clearColumnValues();
+						for(org.talend.components.api.schema.SchemaElement childDynamic_<%=cid%> : dynamicSchemaElement_<%=cid%>.getChildren()){
+							org.talend.components.api.schema.internal.DataSchemaElement childDynamicElement_<%=cid%> = (org.talend.components.api.schema.internal.DataSchemaElement)childDynamic_<%=cid%>;
+							dynamic_<%=cid%>.addColumnValue(org.talend.components.api.schema.column.type.TypeMapping.convert(source_<%=cid%>.getFamilyName(), childDynamicElement_<%=cid%>, childDynamicElement_<%=cid%>.getAppColType().newInstance().retrieveTValue(recordReader_<%=cid%>.getCurrent(), childDynamicElement_<%=cid%>.getAppColName())));
+						}
+						<%=outgoingConn.getName()%>.<%=dynamicColName%> = dynamic_<%=cid%>;
+					<%
+					}
+					%>
+					<%
+					for(IMetadataColumn column : columnList){ // column
 						String columnName = column.getLabel();
 		              	JavaType javaType = JavaTypesManager.getJavaTypeFromId(column.getTalendType());
-						String patternValue = column.getPattern() == null || column.getPattern().trim().length() == 0 ? null : column.getPattern();
 						String typeToGenerate = JavaTypesManager.getTypeToGenerate(column.getTalendType(), column.isNullable());
-		              	
-%>
-						value_<%=cid %> = row_<%=cid %>.get("<%=columnName %>");
-						if (value_<%=cid %> != null) {
-<%
-							if (javaType == JavaTypesManager.STRING) { 
-%>
-								<%=outgoingConn.getName()%>.<%=columnName%> = (String) value_<%=cid%>;
-<%
-							} else if (javaType == JavaTypesManager.OBJECT) {
-%>
-								<%=outgoingConn.getName()%>.<%=columnName%> = value_<%=cid%>;
-<%
-							} else if(javaType == JavaTypesManager.DATE) { 
-%>
-								<%=outgoingConn.getName()%>.<%=columnName%> = ParserUtils.parseTo_Date((String)value_<%=cid%>, <%= patternValue %>);
-<%
-							} else if(javaType == JavaTypesManager.BYTE_ARRAY) {
-%>
-								<%=outgoingConn.getName()%>.<%=columnName%> = value_<%=cid%>.getBytes();
-<%
-							} else  { // other
-%>
-								<%=outgoingConn.getName()%>.<%=columnName%> = ParserUtils.parseTo_<%= typeToGenerate %>((String)value_<%=cid%>);
-<%
-							}
-%>
-						} else {
-							<%=outgoingConn.getName()%>.<%=columnName%> = <%=JavaTypesManager.getDefaultValueFromJavaType(typeToGenerate)%>;
-						}	              	
-<%
-					} // column
-			} // outgoingConn
-		} // outgoing size
-	} else { // canStart
-	// Output
-%>
-		runtime_<%=cid %>.outputBegin(props_<%=cid %>);
-<%
-	} // canStart
-}else{
-%>
-	// This for "metadata == null", like connection component
-	// FIXME - this is a compromise 
-	runtime_<%=cid %>.inputBegin(props_<%=cid %>);
-<%
-} // metadata
+						if(columnName.equals(dynamicColName)){
+							continue;
+						}
+						//TODO consider null and default and reject in here
+						%>
+						<%=outgoingConn.getName()%>.<%=columnName%> = (<%=typeToGenerate%>)org.talend.components.api.schema.column.type.TypeMapping.convert(source_<%=cid%>.getFamilyName(), fieldsMap_<%=cid%>.get("<%=columnName%>"), fieldsMap_<%=cid%>.get("<%=columnName%>").getAppColType().newInstance().retrieveTValue(recordReader_<%=cid%>.getCurrent(), fieldsMap_<%=cid%>.get("<%=columnName%>").getAppColName()));
+					<%
+					}
+			}			
+		}
+	}else if(def instanceof org.talend.components.api.component.OutputComponentDefinition){
+	%>
+		org.talend.components.api.runtime.output.Sink sink_<%=cid%> = ((org.talend.components.api.component.OutputComponentDefinition)def_<%=cid%>).getOutputRuntime();
+		sink_<%=cid%>.init(props_<%=cid%>);
+		org.talend.components.api.runtime.output.Writer recordWriter_<%=cid%> = sink_<%=cid%>.getRecordWriter();
+		java.util.List<org.talend.components.api.schema.SchemaElement> fields_<%=cid%> = sink_<%=cid%>.getSchema();
+		java.util.Map<String, org.talend.components.api.schema.SchemaElement.Type> fieldsMap_<%=cid%> = new java.util.HashMap<String, org.talend.components.api.schema.SchemaElement.Type>();
+		for(org.talend.components.api.schema.SchemaElement field_<%=cid%> : fields_<%=cid%>){
+			fieldsMap_<%=cid%>.put(field_<%=cid%>.getName(), field_<%=cid%>.getType());
+		}
+		<%//wait for using avro replace BaseRowStruct%>
+		org.talend.components.api.runtime.row.BaseRowStruct row_<%=cid%> = new org.talend.components.api.runtime.row.BaseRowStruct(fieldsMap_<%=cid%>);
+	<%	
+	}
+}
 %>
 
 

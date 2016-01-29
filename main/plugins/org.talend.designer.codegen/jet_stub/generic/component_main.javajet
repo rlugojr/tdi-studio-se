@@ -1,7 +1,7 @@
 <%@ jet
 imports="
         java.util.List
-
+		org.talend.components.api.component.ComponentDefinition
         org.talend.components.api.runtime.ComponentRuntime
 		org.talend.component.core.model.Component
         org.talend.core.model.metadata.IMetadataColumn
@@ -23,54 +23,52 @@ CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
 INode node = (INode)codeGenArgument.getArgument();
 String cid = node.getUniqueName();
 Component component = (Component)node.getComponent();
+ComponentDefinition def = component.getComponentDefinition();
 
-if (!component.canStart()) {
+if(def instanceof org.talend.components.api.component.OutputComponentDefinition){
 %>
-
-// OUTPUT
-
-<%
-List<? extends IConnection> outgoingConns = node.getOutgoingSortedConnections();
-if (outgoingConns!=null){
-	for (int i = 0; i < outgoingConns.size(); i++) {
-    	IConnection outgoingConn = outgoingConns.get(i);
-    	if (outgoingConn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {
-%>
-			<%=outgoingConn.getName() %> = null;			
-<%
-    	}
-    }
-}
-
-List<IMetadataTable> metadatas = node.getMetadataList();
-IMetadataTable metadata = metadatas.get(0);
-if ((metadatas != null) && (metadatas.size() > 0) && (metadata = metadatas.get(0)) != null) { // metadata
-
-%>
-// METADATAS
-<%
-
-
-	List<IMetadataColumn> columnList = metadata.getListColumns();
-	int nbSchemaColumns = columnList.size();
-
-	List< ? extends IConnection> conns = node.getIncomingConnections();
-	for (IConnection conn : conns) { // conn
-		if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) { // conn line style
-%>
-			java.util.Map<String, Object> row_<%=cid %> = new java.util.HashMap<>();
-<%
-			for (IMetadataColumn column : columnList) { // column
-%>
-				row_<%=cid %>.put("<%=column.getLabel() %>", <%=conn.getName() %>.<%=column.getLabel() %>); 						
-<%
-			} // column
-%>
-			runtime_<%=cid %>.outputMain(row_<%=cid %>);
-<%
-		} // conn line style
-	} // conn
-} // metadata
+	
+	// OUTPUT
+	
+	<%
+	List<? extends IConnection> outgoingConns = node.getOutgoingSortedConnections();
+	if (outgoingConns!=null){
+		for (int i = 0; i < outgoingConns.size(); i++) {
+	    	IConnection outgoingConn = outgoingConns.get(i);
+	    	if (outgoingConn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) {
+			%>
+				<%=outgoingConn.getName()%> = null;			
+			<%
+	    	}
+	    }
+	}
+	
+	List<IMetadataTable> metadatas = node.getMetadataList();
+	IMetadataTable metadata = metadatas.get(0);
+	if ((metadatas != null) && (metadatas.size() > 0) && (metadata = metadatas.get(0)) != null) { // metadata
+	
+	%>
+	// METADATAS
+	<%
+	
+	
+		List<IMetadataColumn> columnList = metadata.getListColumns();
+		int nbSchemaColumns = columnList.size();
+	
+		List< ? extends IConnection> conns = node.getIncomingConnections();
+		for (IConnection conn : conns) { // conn
+			if (conn.getLineStyle().hasConnectionCategory(IConnectionCategory.DATA)) { // conn line style
+				for (IMetadataColumn column : columnList) { // column
+				%>
+					row_<%=cid%>.put("<%=column.getLabel()%>", <%=conn.getName()%>.<%=column.getLabel()%>); 						
+				<%
+				} // column
+				%>
+				recordWriter_<%=cid%>.write(row_<%=cid%>);
+			<%
+			} // conn line style
+		} // conn
+	} // metadata
 
 } // canStart
 %>

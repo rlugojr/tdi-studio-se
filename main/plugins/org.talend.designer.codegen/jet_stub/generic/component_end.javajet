@@ -1,5 +1,6 @@
 <%@ jet 
 imports="
+		org.talend.components.api.component.ComponentDefinition
         org.talend.components.api.runtime.ComponentRuntime
 		org.talend.component.core.model.Component
     	org.talend.core.model.process.INode 
@@ -19,8 +20,9 @@ CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
 INode node = (INode)codeGenArgument.getArgument();
 String cid = node.getUniqueName();
 Component component = (Component)node.getComponent();
+ComponentDefinition def = component.getComponentDefinition();
 
-if (component.canStart()) {
+if(def instanceof org.talend.components.api.component.InputComponentDefinition){
 // Input
 	List<? extends IConnection> outgoingConns = node.getOutgoingSortedConnections();
 	if (outgoingConns.size() > 0) { // outgoing size
@@ -34,12 +36,14 @@ if (component.canStart()) {
 	} // outgoing size
 %>
 
-	runtime_<%=cid %>.inputEnd();
+	recordReader_<%=cid%>.close();
+	source_<%=cid%>.close();
 <%
-} else { 
+}else if(def instanceof org.talend.components.api.component.OutputComponentDefinition){
 // Output
 %>
-	runtime_<%=cid %>.outputEnd();
+	recordWriter_<%=cid%>.close();
+	sink_<%=cid%>.close();
 <%
 }
 %>
