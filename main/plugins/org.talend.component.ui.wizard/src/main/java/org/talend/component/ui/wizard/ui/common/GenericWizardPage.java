@@ -29,6 +29,7 @@ import org.talend.components.api.service.ComponentService;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.ui.check.ICheckListener;
 import org.talend.core.ui.check.IChecker;
+import org.talend.core.ui.metadata.generic.IGenericMetadataWizardPage;
 import org.talend.designer.core.model.components.ElementParameter;
 
 /**
@@ -36,7 +37,7 @@ import org.talend.designer.core.model.components.ElementParameter;
  * created by ycbai on 2015年9月29日 Detailled comment
  *
  */
-public abstract class GenericWizardPage extends WizardPage {
+public abstract class GenericWizardPage extends WizardPage implements IGenericMetadataWizardPage {
 
     protected List<ElementParameter> parameters = new ArrayList<>();
 
@@ -118,6 +119,7 @@ public abstract class GenericWizardPage extends WizardPage {
         }
     }
 
+    @Override
     public Form getForm() {
         return this.form;
     }

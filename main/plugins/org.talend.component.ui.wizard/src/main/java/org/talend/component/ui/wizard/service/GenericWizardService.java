@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -32,6 +33,7 @@ import org.talend.component.ui.wizard.internal.service.GenericWizardInternalServ
 import org.talend.component.ui.wizard.model.FakeElement;
 import org.talend.component.ui.wizard.persistence.SchemaUtils;
 import org.talend.component.ui.wizard.ui.DynamicComposite;
+import org.talend.component.ui.wizard.ui.GenericConnWizardPage;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.components.api.properties.ComponentProperties.Deserialized;
 import org.talend.components.api.properties.presentation.Form;
@@ -205,6 +207,13 @@ public class GenericWizardService implements IGenericWizardService {
             }
         }
         return componentWizard;
+    }
+
+    @Override
+    public IWizardPage createGenericConnWizardPage(ConnectionItem connectionItem, boolean isRepositoryObjectEditable,
+            String[] existingNames, boolean creation, Form form, ComponentService compService, boolean addContextSupport) {
+        return new GenericConnWizardPage(connectionItem, isRepositoryObjectEditable, existingNames, creation, form, compService,
+                addContextSupport);
     }
 
 }
