@@ -50,6 +50,7 @@ public class SchemaUtils {
         schemaPropertyTV.setTag(IGenericConstants.COMPONENT_SCHEMA_TAG);
         schemaPropertyTV.setValue(schemaPropertyName);
         metadataTable.getTaggedValue().add(schemaPropertyTV);
+        // FIXME: need to use the new implementation from components framework(Avro schema --> MetadataTable).
         Object schemaObj = ComponentsUtils.getGenericPropertyValue(properties, schemaPropertyName);
         if (schemaObj instanceof Schema) {
             convertComponentSchemaIntoTalendSchema((Schema) schemaObj, metadataTable);
@@ -102,24 +103,22 @@ public class SchemaUtils {
     }
 
     public static List<MetadataTable> getMetadataTables(orgomg.cwm.objectmodel.core.Package parentPackage,
-            Class<? extends orgomg.cwm.objectmodel.core.Package> containerTypeClass) {
+            Class containerTypeClass) {
         List<MetadataTable> metadataTables = new ArrayList<>();
-        List<? extends orgomg.cwm.objectmodel.core.Package> subContainers = PackageHelper.getOwnedElements(parentPackage,
-                containerTypeClass);
-        for (orgomg.cwm.objectmodel.core.Package subContainer : subContainers) {
-            if (containerTypeClass.isAssignableFrom(subContainer.getClass())) {
-                List<MetadataTable> tables = PackageHelper.getOwnedElements(subContainer, MetadataTable.class);
-                if (tables.size() > 0) {
-                    metadataTables.addAll(tables);
+        metadataTables.addAll(PackageHelper.getOwnedElements(parentPackage, MetadataTable.class));
+        if (containerTypeClass != null) {
+            List subContainers = PackageHelper.getOwnedElements(parentPackage, containerTypeClass);
+            for (Object subContainer : subContainers) {
+                if (subContainer instanceof orgomg.cwm.objectmodel.core.Package) {
+                    orgomg.cwm.objectmodel.core.Package subContainerPackage = (orgomg.cwm.objectmodel.core.Package) subContainer;
+                    metadataTables.addAll(getMetadataTables(subContainerPackage, containerTypeClass));
                 }
-                metadataTables.addAll(getMetadataTables(subContainer, containerTypeClass));
             }
         }
         return metadataTables;
     }
 
-    public static MetadataTable getMetadataTable(Connection connection, String tabLabel,
-            Class<? extends orgomg.cwm.objectmodel.core.Package> containerTypeClass) {
+    public static MetadataTable getMetadataTable(Connection connection, String tabLabel, Class containerTypeClass) {
         List<MetadataTable> tables = getMetadataTables(connection, containerTypeClass);
         for (MetadataTable table : tables) {
             if (tabLabel != null && tabLabel.equals(table.getLabel())) {

@@ -213,7 +213,7 @@ public class GenericRepositoryContentHandler extends AbstractRepositoryContentHa
             return null;
         }
         ConnectionItem connectionItem = (ConnectionItem) object.getProperty().getItem();
-        table = SchemaUtils.getMetadataTable(connectionItem.getConnection(), table.getLabel(), SubContainer.class);
+        table = SchemaUtils.getMetadataTable(connectionItem.getConnection(), table.getLabel(), table.eContainer().getClass());
         return new GenericSchemaWizard(wb, creation, connectionItem, table, forceReadOnly);
     }
 
