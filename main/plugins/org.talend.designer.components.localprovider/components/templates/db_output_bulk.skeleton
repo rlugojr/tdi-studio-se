@@ -3807,6 +3807,8 @@ public class CLASS {
     }
     
     public class JDBCManager extends Manager {
+        String lChar = "";
+        String rChar = "";
         public JDBCManager(String cid) {
             super(cid);
         }
@@ -3814,11 +3816,17 @@ public class CLASS {
             return JDBC;
         }
         protected String getLProtectedChar() {
-            return "";
+            return lChar;
         }
         protected String getRProtectedChar() {
-            return "";
+            return rChar;
         }        
+        public void setLProtectedChar(String lChar){
+            this.lChar = lChar;
+        }
+        public void setRProtectedChar(String rChar){
+            this.rChar = rChar;
+        }
     }    
     public class SAPHanaManager extends Manager {
 
