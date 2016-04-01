@@ -138,11 +138,20 @@
     >
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
+    
+    <PARAMETER
+		NAME="PROPERTIES"
+		FIELD="TEXT"
+		NUM_ROW="6"
+		REPOSITORY_VALUE="PROPERTIES_STRING"
+		SHOW_IF="USE_EXISTING_CONNECTION == 'false'">
+		<DEFAULT>""</DEFAULT>
+	</PARAMETER>
 
     <PARAMETER
       NAME="TABLE"
       FIELD="DBTABLE"
-      NUM_ROW="6"
+      NUM_ROW="7"
       REQUIRED="true"
     >
       <DEFAULT>""</DEFAULT>
@@ -151,7 +160,7 @@
     <PARAMETER
       NAME="TABLE_ACTION"
       FIELD="CLOSED_LIST"
-      NUM_ROW="7"
+      NUM_ROW="8"
       NOT_SHOW_IF="PARALLELIZE == 'true'"
     >
       <ITEMS DEFAULT="NONE">
@@ -167,7 +176,7 @@
     <PARAMETER
       NAME="DATA_ACTION"
       FIELD="CLOSED_LIST"
-      NUM_ROW="7"
+      NUM_ROW="8"
     >
       <ITEMS DEFAULT="INSERT">
         <ITEM NAME="INSERT"           VALUE="INSERT" />
@@ -181,7 +190,7 @@
     <PARAMETER
       NAME="SCHEMA_FLOW"
       FIELD="SCHEMA_TYPE"
-      NUM_ROW="8"
+      NUM_ROW="9"
     >
       <DEFAULT>""</DEFAULT>
     </PARAMETER>
@@ -190,7 +199,7 @@
       NAME="SCHEMA_REJECT"
       FIELD="SCHEMA_TYPE"
       REQUIRED="true"
-      NUM_ROW="8"
+      NUM_ROW="9"
       CONTEXT="REJECT"
       SHOW="true">
       <TABLE READONLY="true">
@@ -202,7 +211,7 @@
 	<PARAMETER
       NAME="DIE_ON_ERROR"
       FIELD="CHECK"
-      NUM_ROW="9"
+      NUM_ROW="10"
     >
       <DEFAULT>false</DEFAULT>
     </PARAMETER>
@@ -210,7 +219,7 @@
 	<PARAMETER
       NAME="MAPPING"
       FIELD="MAPPING_TYPE"
-      NUM_ROW="10"
+      NUM_ROW="11"
       SHOW="false"
     >
       <DEFAULT>redshift_id</DEFAULT>
@@ -339,7 +348,7 @@
 
    <CODEGENERATION>
      <IMPORTS>
-     	<IMPORT NAME="Driver-Redshift" MODULE="postgresql-8.4-703.jdbc4.jar" MVN="mvn:org.talend.libraries/postgresql-8.4-703.jdbc4/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jdbc.postgresql/lib/postgresql-8.4-703.jdbc4.jar" REQUIRED="true" />
+     	<IMPORT NAME="Driver-Redshift" MODULE="RedshiftJDBC41-1.1.13.1013.jar" MVN="mvn:org.talend.libraries/RedshiftJDBC41-1.1.13.1013/6.2.0"  UrlPath="platform:/plugin/org.talend.libraries.redshift/lib/RedshiftJDBC41-1.1.13.1013.jar" REQUIRED="true" />
      </IMPORTS>
    </CODEGENERATION>
 

@@ -71,6 +71,16 @@
 			REPOSITORY_VALUE="PASSWORD" REQUIRED="true" GROUP="DB_CONFIG">
 			<DEFAULT>""</DEFAULT>
 		</PARAMETER>
+		
+		<PARAMETER
+			NAME="PROPERTIES"
+			FIELD="TEXT"
+			NUM_ROW="8"
+			REPOSITORY_VALUE="PROPERTIES_STRING"
+			SHOW_IF="USE_EXISTING_CONNECTION == 'false'"
+			GROUP="DB_CONFIG">
+			<DEFAULT>""</DEFAULT>
+		</PARAMETER>
 
 		<PARAMETER NAME="TABLE" FIELD="DBTABLE" NUM_ROW="10"
 			LOG4J_ENABLED="false" GROUP="DB_CONFIG">
@@ -205,8 +215,8 @@
 
 	<CODEGENERATION>
 		<IMPORTS>
-			<IMPORT NAME="Driver-Redshift" MODULE="postgresql-8.4-703.jdbc4.jar" MVN="mvn:org.talend.libraries/postgresql-8.4-703.jdbc4/6.0.0" 
-				UrlPath="platform:/plugin/org.talend.libraries.jdbc.postgresql/lib/postgresql-8.4-703.jdbc4.jar"
+			<IMPORT NAME="Driver-Redshift" MODULE="RedshiftJDBC41-1.1.13.1013.jar" MVN="mvn:org.talend.libraries/RedshiftJDBC41-1.1.13.1013/6.2.0" 
+				UrlPath="platform:/plugin/org.talend.libraries.redshift/lib/RedshiftJDBC41-1.1.13.1013.jar"
 				REQUIRED="true" />
 		</IMPORTS>
 	</CODEGENERATION>

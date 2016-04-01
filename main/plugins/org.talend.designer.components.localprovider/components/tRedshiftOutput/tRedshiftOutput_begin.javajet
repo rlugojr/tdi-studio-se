@@ -39,6 +39,8 @@ skeleton="../templates/db_output_bulk.skeleton"
 	String dbschema = ElementParameterParser.getValue(node, "__SCHEMA_DB__");
 
 	String dbuser= ElementParameterParser.getValue(node, "__USER__");
+	
+	String dbproperties = ElementParameterParser.getValue(node, "__PROPERTIES__"); 
 
 	String table = ElementParameterParser.getValue(node,"__TABLE__");//work for sub script. TODO : move it
 	String tableName = ElementParameterParser.getValue(node,"__TABLE__");
@@ -190,9 +192,21 @@ if(("true").equals(useExistingConn)) {
 } else {
 	%>
 
-    java.lang.Class.forName("org.postgresql.Driver");
-    <%dbLog.conn().logJDBCDriver(dbLog.str("org.postgresql.Driver"));%>
-    String url_<%=cid %> = "jdbc:postgresql://"+<%=dbhost%>+":"+<%=dbport%>+"/"+<%=dbname%>;
+    java.lang.Class.forName("com.amazon.redshift.jdbc41.Driver");
+    <%dbLog.conn().logJDBCDriver(dbLog.str("com.amazon.redshift.jdbc41.Driver"));%>
+    
+    <%
+    if(dbproperties == null || ("\"\"").equals(dbproperties) || ("").equals(dbproperties)) {
+	%>
+		String url_<%=cid %> = "jdbc:redshift://"+<%=dbhost%>+":"+<%=dbport%>+"/"+<%=dbname%>;
+	<%
+	} else {
+	%>
+		String url_<%=cid%> = "jdbc:redshift://" + <%=dbhost%> + ":" + <%=dbport%> + "/" + <%=dbname%> + "?" + <%=dbproperties%>;
+	<%
+	}
+    %>
+    
     String dbUser_<%=cid %> = <%=dbuser%>;
     <%
     String passwordFieldName = "__PASS__";

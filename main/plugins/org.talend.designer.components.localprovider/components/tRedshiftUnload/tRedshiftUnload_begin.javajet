@@ -42,16 +42,16 @@ imports="
 		log4jCodeGenerateUtil.useExistConnection(node);
 	} else {
 %>
-		String driverClass_<%=cid%> = "org.postgresql.Driver";
+		String driverClass_<%=cid%> = "com.amazon.redshift.jdbc41.Driver";
 		Class.forName(driverClass_<%=cid%>).newInstance();
 		<%
 		if(dbproperties == null || ("\"\"").equals(dbproperties) || ("").equals(dbproperties)) {
 		%>
-			String url_<%=cid%> = "jdbc:postgresql://" + <%=host%> + ":" + <%=port%> + "/" + <%=dbName%>;
+			String url_<%=cid%> = "jdbc:redshift://" + <%=host%> + ":" + <%=port%> + "/" + <%=dbName%>;
 		<%
 		} else {
 		%>
-			String url_<%=cid%> = "jdbc:postgresql://" + <%=host%> + ":" + <%=port%> + "/" + <%=dbName%> + "?" + <%=dbproperties%>;
+			String url_<%=cid%> = "jdbc:redshift://" + <%=host%> + ":" + <%=port%> + "/" + <%=dbName%> + "?" + <%=dbproperties%>;
 		<%
 		}
 		String passwordFieldName = "__PASS__";

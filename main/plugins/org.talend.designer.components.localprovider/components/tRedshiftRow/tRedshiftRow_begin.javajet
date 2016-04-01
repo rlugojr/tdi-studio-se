@@ -16,13 +16,19 @@ imports="
 	    }
 	    
 		public void setURL(INode node) {
-		%>
-			String url_<%=cid %> = "jdbc:postgresql://"+<%=dbhost%>+":"+<%=dbport%>+"/"+<%=dbname%>;
-		<%
+    		if(dbproperties == null || ("\"\"").equals(dbproperties) || ("").equals(dbproperties)) {
+%>
+				String url_<%=cid%> = "jdbc:redshift://" + <%=dbhost%> + ":" + <%=dbport%> + "/" + <%=dbname%>;
+<%
+	        } else {
+%>
+				String url_<%=cid%> = "jdbc:redshift://" + <%=dbhost%> + ":" + <%=dbport%> + "/" + <%=dbname%> + "?" + <%=dbproperties%>;
+<%
+            }
 		}
 		
 		public String getDirverClassName(INode node){
-			return "org.postgresql.Driver";
+			return "com.amazon.redshift.jdbc41.Driver";
 		}
 	}
 	dbRowBeginUtil = new DBRowBeginUtil();
