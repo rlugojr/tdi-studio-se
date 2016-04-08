@@ -12,7 +12,14 @@
 // ============================================================================
 package org.talend.salesforce;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.Properties;
+
 import com.salesforce.soap.partner.CallOptions;
+import com.salesforce.soap.partner.GetUserInfoResponse;
+import com.salesforce.soap.partner.GetUserInfoResult;
 import com.salesforce.soap.partner.Login;
 import com.salesforce.soap.partner.LoginResult;
 import com.salesforce.soap.partner.SessionHeader;
@@ -29,7 +36,9 @@ public class SforceBasicConnection extends SforceConnection {
     private boolean useHttpChunked;
     private int timeout;
     private String clientID;
+    private String sessionId;
     private String serviceEndPoint;
+    private String sessionFilePath;
     public String getServiceEndPoint(){
     	return this.serviceEndPoint;
     }
@@ -45,6 +54,16 @@ public class SforceBasicConnection extends SforceConnection {
         this.useHttpChunked = builder.useHttpChunked;
         this.timeout = builder.timeout;
         this.clientID = builder.clientID;
+        if(builder.sessionFilePath != null && builder.sessionFilePath.length() > 0){
+        	 this.sessionFilePath = builder.sessionFilePath+"/sessionIDFile_"+this.userInfo.getUsername();
+        }
+        if(sessionFilePath != null){
+        	Properties properties = getSessionProperties();
+            if(properties != null){
+            	 this.sessionId = properties.getProperty("SESSION_ID");
+                 this.serviceEndPoint = properties.getProperty("SERVICE_ENDPOINT");
+            }
+        }
         check();
         init();
     }
@@ -68,17 +87,67 @@ public class SforceBasicConnection extends SforceConnection {
         SforceManagementUtil.useHttpChunked(stub, useHttpChunked);
         SforceManagementUtil.setHttpProxy(stub);
         sh = new SessionHeader();
-        renewSession();
+        if(sessionId != null || serviceEndPoint != null){
+        	sh.setSessionId(sessionId);
+        	SforceManagementUtil.setEndpoint(stub, serviceEndPoint);
+        }else{
+        	renewSession();
+        }
     }
 
     @Override
     protected void renewSession() throws Exception {
         SforceManagementUtil.setEndpoint(stub, login_endpoint);// login_endpoint for login operation
         LoginResult loginResult = stub.login(userInfo, null, co).getResult();
-        sh.setSessionId(loginResult.getSessionId());
+        String sessionId = loginResult.getSessionId();
+        sh.setSessionId(sessionId);
         String serviceEndPoint = loginResult.getServerUrl();
-        this.serviceEndPoint = serviceEndPoint;
         SforceManagementUtil.setEndpoint(stub, serviceEndPoint);// server url for CRUD operation
+        
+        this.serviceEndPoint = serviceEndPoint;
+        this.sessionId = sessionId;
+        if(sessionFilePath != null){
+        	setupSessionProperties();
+        }
+        
+    }
+    
+    protected Properties getSessionProperties() throws Exception{
+    	File sessionFile = new java.io.File(sessionFilePath);
+    	if(sessionFile.exists()){
+    		FileInputStream sessionInput = new FileInputStream(sessionFile);
+    		Properties sessionProp = new Properties();
+    		sessionProp.load(sessionInput);
+    		int maxValidSeconds = Integer.valueOf(sessionProp.getProperty("MAX_VALID_SECONDS"));
+    		if(maxValidSeconds > ((System.currentTimeMillis() - sessionFile.lastModified())/1000)){
+    			return sessionProp;
+    		}
+    		
+    	}
+    	return null;
+    }
+    
+    protected void setupSessionProperties() throws Exception{
+    	GetUserInfoResponse reponse = getUserInfo();
+        GetUserInfoResult result = reponse.getResult();
+        File sessionFile = new java.io.File(sessionFilePath);
+        if(!sessionFile.exists()){
+        	File parentPath = sessionFile.getParentFile();
+        	if(!parentPath.exists()){
+        		parentPath.mkdirs();
+        	}
+        	sessionFile.createNewFile();
+        }
+    	FileOutputStream sessionOutput = new FileOutputStream(sessionFile);
+    	Properties sessionProp = new Properties();
+    	sessionProp.setProperty("SESSION_ID",sessionId);
+    	sessionProp.setProperty("SERVICE_ENDPOINT",serviceEndPoint);
+    	sessionProp.setProperty("MAX_VALID_SECONDS",String.valueOf(result.getSessionSecondsValid()));
+    	try{
+    		sessionProp.store(sessionOutput, null);
+    	}finally{
+    		sessionOutput.close();
+    	}
     }
 
     public static class Builder {
@@ -88,6 +157,7 @@ public class SforceBasicConnection extends SforceConnection {
         private boolean useHttpChunked;
         private int timeout = 60000;
         private String clientID = null;
+        private String sessionFilePath;
 
         public Builder(String login_endpoint, String username, String password) {
             this.login_endpoint = login_endpoint;
@@ -121,7 +191,12 @@ public class SforceBasicConnection extends SforceConnection {
             return this;
         }
 
-        public SforceBasicConnection build() throws Exception {
+		public Builder setSessionFilePath(String sessionFilePath) {
+			this.sessionFilePath = sessionFilePath;
+			return this;
+		}
+
+		public SforceBasicConnection build() throws Exception {
             return new SforceBasicConnection(this);
         }
 

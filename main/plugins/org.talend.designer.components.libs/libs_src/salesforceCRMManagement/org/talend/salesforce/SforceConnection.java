@@ -29,6 +29,8 @@ import com.salesforce.soap.partner.GetServerTimestamp;
 import com.salesforce.soap.partner.GetServerTimestampResponse;
 import com.salesforce.soap.partner.GetUpdated;
 import com.salesforce.soap.partner.GetUpdatedResponse;
+import com.salesforce.soap.partner.GetUserInfo;
+import com.salesforce.soap.partner.GetUserInfoResponse;
 import com.salesforce.soap.partner.Query;
 import com.salesforce.soap.partner.QueryAll;
 import com.salesforce.soap.partner.QueryAllResponse;
@@ -244,6 +246,21 @@ public abstract class SforceConnection {
                     .getExceptionCode())) {
                 renewSession();
                 return describeGlobal(describeGlobal);
+            }
+            throw sfException;
+
+        }
+    }
+    
+    protected GetUserInfoResponse getUserInfo() throws Exception {
+        try {
+        	
+            return stub.getUserInfo(new GetUserInfo(), sh, co);
+        } catch (com.salesforce.soap.partner.UnexpectedErrorFault sfException) {
+            if (ExceptionCode.INVALID_SESSION_ID.equals(sfException.getFaultMessage().getUnexpectedErrorFault()
+                    .getExceptionCode())) {
+                renewSession();
+                return getUserInfo();
             }
             throw sfException;
 

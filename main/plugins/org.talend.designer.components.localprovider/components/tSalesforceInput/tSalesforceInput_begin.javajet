@@ -74,6 +74,8 @@ if ((metadatas != null) && (metadatas.size() > 0)) {
 			String columnname_delimiter = ElementParameterParser.getValue(node, "__COLUMNNAME_DELIMITER__");
 			boolean queryAll = ("true").equals(ElementParameterParser.getValue(node,"__QUERY_ALL__"));
 			String clientID = ElementParameterParser.getValue(node,"__CLIENT_ID__");
+			boolean isUseSaveSession = "true".equals(ElementParameterParser.getValue(node,"__USE_SAVE_SESSION__"));
+			String sessionDir = ElementParameterParser.getValue(node,"__SESSION_DIRECTORY__");
 
 			boolean bulkConnection = ("bulk").equals(ElementParameterParser.getValue(node,"__API__"));
 
@@ -183,6 +185,11 @@ if ((metadatas != null) && (metadatas.size() > 0)) {
                 			new org.talend.salesforce.SforceBasicConnection.Builder(<%=endpoint%>, <%=username%>, decryptedPassword_<%=cid%>)
                 				.setTimeout(<%=timeout%>).needCompression(<%=needCompression%>)
                             	<%
+				            	if(isUseSaveSession){
+								%>
+									.setSessionFilePath(<%=sessionDir%>)
+								<%
+								}
                             	if(clientID!=null && !"".equals(clientID) && !"\"\"".equals(clientID)){
                             	%>
                             		.setClientID(<%=clientID%>)

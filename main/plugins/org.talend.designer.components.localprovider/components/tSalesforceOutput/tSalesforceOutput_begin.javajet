@@ -28,6 +28,8 @@ imports="
     String connection = ElementParameterParser.getValue(node,"__CONNECTION__");
     String timeout = ElementParameterParser.getValue(node,"__TIMEOUT__");
     String clientID = ElementParameterParser.getValue(node,"__CLIENT_ID__");
+	boolean isUseSaveSession = "true".equals(ElementParameterParser.getValue(node,"__USE_SAVE_SESSION__"));
+	String sessionDir = ElementParameterParser.getValue(node,"__SESSION_DIRECTORY__");
     boolean useHttpChunked = "true".equals(ElementParameterParser.getValue(node,"__USE_HTTP_CHUNKED__"));
     // if the extended insert is disabled set the commit level to 1
     if (!extendedInsert) commitLevel = "1";
@@ -111,6 +113,11 @@ imports="
                 new org.talend.salesforce.SforceBasicConnection.Builder(<%=endpoint%>, <%=username%>, decryptedPassword_<%=cid%>)
                     .setTimeout(<%=timeout%>).needCompression(<%=needCompression%>)
                     <%
+	            	if(isUseSaveSession){
+					%>
+						.setSessionFilePath(<%=sessionDir%>)
+					<%
+					}
                     if(clientID!=null && !"".equals(clientID) && !"\"\"".equals(clientID)){
                     %>
                         .setClientID(<%=clientID%>)

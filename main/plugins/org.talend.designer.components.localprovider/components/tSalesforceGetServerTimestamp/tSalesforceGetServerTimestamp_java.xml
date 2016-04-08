@@ -105,11 +105,29 @@
       GROUP="LOGIN">
       <DEFAULT>"password"</DEFAULT>
     </PARAMETER>
+    
+	<PARAMETER
+		NAME="USE_SAVE_SESSION"
+		FIELD="CHECK"
+		NUM_ROW="32"
+		SHOW_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE=='BASIC')"
+		GROUP="LOGIN">
+		<DEFAULT>false</DEFAULT>
+	</PARAMETER>
+       
+     <PARAMETER
+         NAME="SESSION_DIRECTORY"
+         FIELD="DIRECTORY"
+         NUM_ROW="33"
+         SHOW_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE=='BASIC') AND (USE_SAVE_SESSION=='true')"
+         GROUP="LOGIN">
+         <DEFAULT>"__COMP_DEFAULT_FILE_DIR__"</DEFAULT>
+     </PARAMETER>
 
     <PARAMETER
         NAME="OAUTH_CLIENT_ID"
         FIELD="TEXT"
-        NUM_ROW="30"
+        NUM_ROW="35"
         REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE == 'OAUTH')"
         SHOW_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE == 'OAUTH')"
         GROUP="LOGIN">
@@ -119,7 +137,7 @@
     <PARAMETER
         NAME="OAUTH_CLIENT_SECRET"
         FIELD="PASSWORD"
-        NUM_ROW="30"
+        NUM_ROW="35"
         REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE == 'OAUTH')"
         SHOW_IF="(USE_EXISTING_CONNECTION == 'false') AND (LOGIN_TYPE == 'OAUTH')"
         GROUP="LOGIN">
@@ -255,7 +273,7 @@
 
   <CODEGENERATION>
     <IMPORTS>
-    	<IMPORT NAME="salesforceCRM-management" MODULE="salesforceCRMManagement.jar" MVN="mvn:org.talend.libraries/salesforceCRMManagement/6.1.0"  UrlPath="platform:/plugin/org.talend.libraries.salesforce/lib/salesforceCRMManagement.jar" REQUIRED="true" />
+    	<IMPORT NAME="salesforceCRM-management" MODULE="salesforceCRMManagement.jar" MVN="mvn:org.talend.libraries/salesforceCRMManagement/6.1.1"  UrlPath="platform:/plugin/org.talend.libraries.salesforce/lib/salesforceCRMManagement.jar" REQUIRED="true" />
     	<IMPORT NAME="axiom-api"
 			MODULE="axiom-api-1.2.13.jar" MVN="mvn:org.talend.libraries/axiom-api-1.2.13/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.axis2/lib/axiom-api-1.2.13.jar" REQUIRED="true" />
 		<IMPORT NAME="axiom-impl" MODULE="axiom-impl-1.2.13.jar" MVN="mvn:org.talend.libraries/axiom-impl-1.2.13/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.axis2/lib/axiom-impl-1.2.13.jar" REQUIRED="true" />

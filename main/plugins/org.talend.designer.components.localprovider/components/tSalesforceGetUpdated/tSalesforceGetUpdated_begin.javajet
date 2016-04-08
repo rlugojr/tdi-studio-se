@@ -58,6 +58,8 @@ if ((metadatas != null) && (metadatas.size() > 0)) {
 			boolean useExistingConn = ("true").equals(ElementParameterParser.getValue(node,"__USE_EXISTING_CONNECTION__"));
 			String connection = ElementParameterParser.getValue(node,"__CONNECTION__");
 			String clientID = ElementParameterParser.getValue(node,"__CLIENT_ID__");
+			boolean isUseSaveSession = "true".equals(ElementParameterParser.getValue(node,"__USE_SAVE_SESSION__"));
+			String sessionDir = ElementParameterParser.getValue(node,"__SESSION_DIRECTORY__");
 
 			boolean bulkConnection = false; //for tSalesforceOAuth.javajet
 
@@ -178,6 +180,11 @@ if ((metadatas != null) && (metadatas.size() > 0)) {
             			new org.talend.salesforce.SforceBasicConnection.Builder(<%=endpoint%>, <%=username%>, decryptedPassword_<%=cid%>)
             				.setTimeout(<%=timeout%>).needCompression(<%=needCompression%>)
                         	<%
+			            	if(isUseSaveSession){
+							%>
+								.setSessionFilePath(<%=sessionDir%>)
+							<%
+							}
                         	if(clientID!=null && !"".equals(clientID) && !"\"\"".equals(clientID)){
                         	%>
                         		.setClientID(<%=clientID%>)

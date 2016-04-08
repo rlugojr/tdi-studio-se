@@ -30,6 +30,9 @@ String proxyPassword = ElementParameterParser.getValue(node,"__PROXY_PASSWORD__"
 boolean bulkConnection = ("true").equals(ElementParameterParser.getValue(node,"__BULK_CONNECTION__"));
 String apiVersion = ElementParameterParser.getValue(node,"__API_VERSION__");
 String clientID = ElementParameterParser.getValue(node,"__CLIENT_ID__");
+
+boolean isUseSaveSession = "true".equals(ElementParameterParser.getValue(node,"__USE_SAVE_SESSION__"));
+String sessionDir = ElementParameterParser.getValue(node,"__SESSION_DIRECTORY__");
 %>
 System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
 <%
@@ -180,6 +183,11 @@ if(bulkConnection){//TODO: ==> need to investigate set http chunked for bulk con
 			= new org.talend.salesforce.SforceBasicConnection.Builder(<%=endpoint%>, <%=username%>, decryptedPassword_<%=cid%>)
 				.setTimeout(<%=timeout%>).needCompression(<%=needCompression%>)
             	<%
+            	if(isUseSaveSession){
+				%>
+					.setSessionFilePath(<%=sessionDir%>)
+				<%
+				}
             	if(clientID!=null && !"".equals(clientID) && !"\"\"".equals(clientID)){
             	%>
             		.setClientID(<%=clientID%>)
