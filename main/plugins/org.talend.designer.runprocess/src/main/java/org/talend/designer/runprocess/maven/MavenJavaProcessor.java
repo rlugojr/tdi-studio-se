@@ -39,6 +39,7 @@ import org.talend.core.repository.utils.ItemResourceUtil;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.process.TalendProcessOptionConstants;
+import org.talend.core.runtime.projectsetting.IProjectSettingTemplateConstants;
 import org.talend.core.runtime.repository.build.AbstractBuildProvider;
 import org.talend.core.runtime.repository.build.BuildExportManager;
 import org.talend.core.runtime.repository.build.IBuildParametes;
@@ -287,7 +288,8 @@ public class MavenJavaProcessor extends JavaProcessor {
 
             createMavenPom = createTemplatePom;
         } else {
-            createMavenPom = new CreateMavenTestPom(this, getPomFile());
+            createMavenPom = new CreateMavenTestPom(this, getPomFile(),
+                    IProjectSettingTemplateConstants.POM_TEST_TEMPLATE_FILE_NAME);
         }
         return createMavenPom;
 
