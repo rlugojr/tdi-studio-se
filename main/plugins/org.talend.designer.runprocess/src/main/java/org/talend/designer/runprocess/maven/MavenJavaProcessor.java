@@ -217,8 +217,6 @@ public class MavenJavaProcessor extends JavaProcessor {
 
             IMavenPomCreator createTemplatePom = createMavenPomCreator();
             if (createTemplatePom != null) {
-                createTemplatePom.setArgumentsMap(getArguments());
-                createTemplatePom.setOverwrite(true);
                 boolean previousValue = ProcessUtils.isHDInsight();
                 ProcessUtils.setHDInsight(ProcessUtils.isDistributionExist((ProcessItem) property.getItem()));
                 createTemplatePom.create(null);
@@ -241,6 +239,8 @@ public class MavenJavaProcessor extends JavaProcessor {
         parameters.put(IBuildPomCreatorParameters.FILE_ASSEMBLY, getAssemblyFile());
         parameters.put(IBuildPomCreatorParameters.CP_LINUX, this.unixClasspath);
         parameters.put(IBuildPomCreatorParameters.CP_WIN, this.windowsClasspath);
+        parameters.put(IBuildPomCreatorParameters.ARGUMENTS_MAP, getArguments());
+        parameters.put(IBuildPomCreatorParameters.OVERWRITE_POM, Boolean.TRUE);
 
         AbstractBuildProvider foundBuildProvider = BuildExportManager.getInstance().getBuildProvider(buildTypeName, parameters);
         if (foundBuildProvider != null) {

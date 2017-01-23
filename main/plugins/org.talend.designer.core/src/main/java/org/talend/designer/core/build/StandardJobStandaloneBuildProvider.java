@@ -18,13 +18,17 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.IPath;
 import org.talend.core.model.properties.Item;
+import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.repository.utils.ItemResourceUtil;
+import org.talend.core.runtime.process.IBuildJobHandler;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
 import org.talend.core.runtime.repository.build.RepositoryObjectTypeBuildProvider;
 import org.talend.designer.maven.tools.creator.CreateMavenJobPom;
 import org.talend.designer.runprocess.IProcessor;
+import org.talend.repository.ui.wizards.exportjob.handler.BuildJobHandler;
+import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManager.ExportChoice;
 
 /**
  * DOC ggu class global comment. Detailled comment
@@ -71,23 +75,55 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
         if (item == null || !(item instanceof Item)) {
             return null;
         }
+        final Object argumentsMap = parameters.get(ARGUMENTS_MAP);
+        if (argumentsMap == null || !(argumentsMap instanceof Map)) {
+            return null;
+        }
+        Object overwrite = parameters.get(OVERWRITE_POM);
+        if (overwrite == null) {
+            overwrite = Boolean.FALSE;
+        }
 
-        CreateMavenJobPom createTemplatePom = new CreateMavenJobPom((IProcessor) processor, (IFile) pomFile);
+        CreateMavenJobPom creator = new CreateMavenJobPom((IProcessor) processor, (IFile) pomFile);
 
-        createTemplatePom.setUnixClasspath(linuxClassPath.toString());
-        createTemplatePom.setWindowsClasspath(winClassPath.toString());
+        creator.setUnixClasspath(linuxClassPath.toString());
+        creator.setWindowsClasspath(winClassPath.toString());
 
-        createTemplatePom.setAssemblyFile((IFile) assemblyFile);
+        creator.setAssemblyFile((IFile) assemblyFile);
+        creator.setArgumentsMap((Map<String, Object>) argumentsMap);
+        creator.setOverwrite(Boolean.parseBoolean(overwrite.toString()));
 
         final Property itemProperty = ((Item) item).getProperty();
         IPath itemLocationPath = ItemResourceUtil.getItemLocationPath(itemProperty);
         IFolder objectTypeFolder = ItemResourceUtil.getObjectTypeFolder(itemProperty);
         if (itemLocationPath != null && objectTypeFolder != null) {
             IPath itemRelativePath = itemLocationPath.removeLastSegments(1).makeRelativeTo(objectTypeFolder.getLocation());
-            createTemplatePom.setObjectTypeFolder(objectTypeFolder);
-            createTemplatePom.setItemRelativePath(itemRelativePath);
+            creator.setObjectTypeFolder(objectTypeFolder);
+            creator.setItemRelativePath(itemRelativePath);
         }
-        return createTemplatePom;
+        return creator;
     }
 
+    @Override
+    public IBuildJobHandler createHandler(Map<String, Object> parameters) {
+        final Object item = parameters.get(ITEM);
+        if (item == null || !(item instanceof ProcessItem)) {
+            return null;
+        }
+        final Object version = parameters.get(VERSION);
+        if (version == null) {
+            return null;
+        }
+        final Object contextGroup = parameters.get(CONTEXT_GROUP);
+        if (contextGroup == null) {
+            return null;
+        }
+        final Object choiceOption = parameters.get(CHOICE_OPTION);
+        if (choiceOption == null || !(choiceOption instanceof Map)) {
+            return null;
+        }
+        IBuildJobHandler buildHandler = new BuildJobHandler((ProcessItem) item, version.toString(), contextGroup.toString(),
+                (Map<ExportChoice, Object>) choiceOption);
+        return buildHandler;
+    }
 }
