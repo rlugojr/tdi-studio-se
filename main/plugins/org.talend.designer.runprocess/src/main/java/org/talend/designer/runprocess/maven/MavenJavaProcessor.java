@@ -21,18 +21,21 @@ import java.util.Set;
 import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.commons.utils.resource.FileExtensions;
+import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.process.IProcess;
 import org.talend.core.model.process.JobInfo;
 import org.talend.core.model.process.ProcessUtils;
 import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.utils.JavaResourcesHelper;
+import org.talend.core.repository.utils.ItemResourceUtil;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.process.TalendProcessOptionConstants;
@@ -41,8 +44,11 @@ import org.talend.core.runtime.repository.build.BuildExportManager;
 import org.talend.core.runtime.repository.build.IBuildParametes;
 import org.talend.core.runtime.repository.build.IBuildPomCreatorParameters;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
+import org.talend.core.ui.ITestContainerProviderService;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.tools.ProjectPomManager;
+import org.talend.designer.maven.tools.creator.CreateMavenJobPom;
+import org.talend.designer.maven.tools.creator.CreateMavenTestPom;
 import org.talend.designer.maven.utils.PomUtil;
 import org.talend.designer.runprocess.ProcessorException;
 import org.talend.designer.runprocess.ProcessorUtilities;
@@ -250,7 +256,41 @@ public class MavenJavaProcessor extends JavaProcessor {
             }
         }
 
-        return null;
+        /*
+         * Later, should remove the following
+         */
+        boolean isTestContainer = false;
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(ITestContainerProviderService.class)) {
+            ITestContainerProviderService testContainerService = (ITestContainerProviderService) GlobalServiceRegister
+                    .getDefault().getService(ITestContainerProviderService.class);
+            if (testContainerService != null) {
+                isTestContainer = testContainerService.isTestContainerItem(this.getProperty().getItem());
+            }
+        }
+
+        IMavenPomCreator createMavenPom = null;
+        if (!isTestContainer) {
+            CreateMavenJobPom createTemplatePom = new CreateMavenJobPom(this, getPomFile());
+
+            createTemplatePom.setUnixClasspath(this.unixClasspath);
+            createTemplatePom.setWindowsClasspath(this.windowsClasspath);
+
+            createTemplatePom.setAssemblyFile(getAssemblyFile());
+
+            IPath itemLocationPath = ItemResourceUtil.getItemLocationPath(this.getProperty());
+            IFolder objectTypeFolder = ItemResourceUtil.getObjectTypeFolder(this.getProperty());
+            if (itemLocationPath != null && objectTypeFolder != null) {
+                IPath itemRelativePath = itemLocationPath.removeLastSegments(1).makeRelativeTo(objectTypeFolder.getLocation());
+                createTemplatePom.setObjectTypeFolder(objectTypeFolder);
+                createTemplatePom.setItemRelativePath(itemRelativePath);
+            }
+
+            createMavenPom = createTemplatePom;
+        } else {
+            createMavenPom = new CreateMavenTestPom(this, getPomFile());
+        }
+        return createMavenPom;
+
     }
 
     /**
