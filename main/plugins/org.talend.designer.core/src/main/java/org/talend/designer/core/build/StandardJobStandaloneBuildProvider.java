@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.designer.core.build;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -75,8 +76,11 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
         if (item == null || !(item instanceof Item)) {
             return null;
         }
-        final Object argumentsMap = parameters.get(ARGUMENTS_MAP);
-        if (argumentsMap == null || !(argumentsMap instanceof Map)) {
+        Object argumentsMap = parameters.get(ARGUMENTS_MAP);
+        if (argumentsMap == null) {
+            argumentsMap = Collections.emptyMap();
+        }
+        if (!(argumentsMap instanceof Map)) {
             return null;
         }
         Object overwrite = parameters.get(OVERWRITE_POM);
