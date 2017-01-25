@@ -60,18 +60,6 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
         if (pomFile == null || !(pomFile instanceof IFile)) {
             return null;
         }
-        final Object assemblyFile = parameters.get(FILE_ASSEMBLY);
-        if (assemblyFile == null || !(assemblyFile instanceof IFile)) {
-            return null;
-        }
-        final Object winClassPath = parameters.get(CP_WIN);
-        if (winClassPath == null) {
-            return null;
-        }
-        final Object linuxClassPath = parameters.get(CP_LINUX);
-        if (linuxClassPath == null) {
-            return null;
-        }
         final Object item = parameters.get(ITEM);
         if (item == null || !(item instanceof Item)) {
             return null;
@@ -86,6 +74,19 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
         Object overwrite = parameters.get(OVERWRITE_POM);
         if (overwrite == null) {
             overwrite = Boolean.FALSE;
+        }
+
+        final Object assemblyFile = parameters.get(FILE_ASSEMBLY);
+        if (assemblyFile == null || !(assemblyFile instanceof IFile)) {
+            return null;
+        }
+        final Object winClassPath = parameters.get(CP_WIN);
+        if (winClassPath == null) {
+            return null;
+        }
+        final Object linuxClassPath = parameters.get(CP_LINUX);
+        if (linuxClassPath == null) {
+            return null;
         }
 
         CreateMavenJobPom creator = new CreateMavenJobPom((IProcessor) processor, (IFile) pomFile);
