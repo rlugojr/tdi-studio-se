@@ -15,10 +15,12 @@ package org.talend.repository.ui.wizards.exportjob.scriptsmanager;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.emf.common.util.EMap;
 import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.runtime.process.IBuildJobHandler;
 import org.talend.core.runtime.repository.build.AbstractBuildProvider;
 import org.talend.core.runtime.repository.build.BuildExportManager;
+import org.talend.core.runtime.repository.build.IBuildExportHandler;
 import org.talend.core.runtime.repository.build.IBuildJobParameters;
 import org.talend.core.runtime.repository.build.IBuildParametes;
 import org.talend.repository.ui.wizards.exportjob.JavaJobScriptsExportWSWizardPage.JobExportType;
@@ -30,6 +32,13 @@ import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManag
  *
  */
 public class BuildJobFactory {
+
+    private static final Map<JobExportType, String> oldBuildTypeMap = new HashMap<JobExportType, String>();
+    static {
+        // from the extension point
+        oldBuildTypeMap.put(JobExportType.POJO, "STANDALONE");
+        oldBuildTypeMap.put(JobExportType.OSGI, "OSGI");
+    }
 
     /**
      * Create the build job handler according the job export type. Now only implement the handler of standalone job.
@@ -44,34 +53,37 @@ public class BuildJobFactory {
     public static IBuildJobHandler createBuildJobHandler(ProcessItem processItem, String contextName, String version,
             Map<ExportChoice, Object> exportChoiceMap, JobExportType jobExportType) {
 
+        String buildType = null;
+        if (jobExportType != null) {
+            final String newType = oldBuildTypeMap.get(jobExportType);
+            if (newType == null) {// not valid type
+                return null;
+            }
+            buildType = newType;
+        } else { // if null, will try to find the type from item for build type.
+            final EMap additionalProperties = processItem.getProperty().getAdditionalProperties();
+            final Object type = additionalProperties.get("<BuildTypeKey>"); // TODO
+            if (type != null) {
+                buildType = type.toString();
+            }// else{ // if didn't set, should use default provider to create it.
+        }
+
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put(IBuildParametes.ITEM, processItem);
         parameters.put(IBuildParametes.VERSION, version);
         parameters.put(IBuildJobParameters.CONTEXT_GROUP, contextName);
         parameters.put(IBuildJobParameters.CHOICE_OPTION, exportChoiceMap);
 
-        IBuildJobHandler handler = null;
-        switch (jobExportType) {
-        case POJO:
-            final AbstractBuildProvider buildProvider = BuildExportManager.getInstance().getBuildProvider("Standalone",
-                    parameters);
-            if (buildProvider != null) {
-                handler = buildProvider.createHandler(parameters);
+        final AbstractBuildProvider buildProvider = BuildExportManager.getInstance().getBuildProvider(buildType, parameters);
+        if (buildProvider != null) {
+            IBuildExportHandler buildExportHandler = buildProvider.createBuildExportHandler(parameters);
+            if (buildExportHandler instanceof IBuildJobHandler) {
+                return (IBuildJobHandler) buildExportHandler;
             }
-            if (handler == null) {
-                // TODO, should remove
-                handler = new BuildJobHandler(processItem, version, contextName, exportChoiceMap);
-            }
-            break;
-        case WSWAR:
-        case WSZIP:
-        case OSGI:
-            break;
-        default:
-            handler = new BuildJobHandler(processItem, version, contextName, exportChoiceMap);
         }
 
-        return handler;
+        // default
+        return new BuildJobHandler(processItem, version, contextName, exportChoiceMap);
     }
 
 }

@@ -24,6 +24,7 @@ import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.repository.utils.ItemResourceUtil;
 import org.talend.core.runtime.process.IBuildJobHandler;
+import org.talend.core.runtime.repository.build.IBuildExportHandler;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
 import org.talend.core.runtime.repository.build.RepositoryObjectTypeBuildProvider;
 import org.talend.designer.maven.tools.creator.CreateMavenJobPom;
@@ -110,7 +111,10 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
     }
 
     @Override
-    public IBuildJobHandler createHandler(Map<String, Object> parameters) {
+    public IBuildExportHandler createBuildExportHandler(Map<String, Object> parameters) {
+        if (parameters == null || parameters.isEmpty()) {
+            return null;
+        }
         final Object item = parameters.get(ITEM);
         if (item == null || !(item instanceof ProcessItem)) {
             return null;
@@ -123,8 +127,11 @@ public class StandardJobStandaloneBuildProvider extends RepositoryObjectTypeBuil
         if (contextGroup == null) {
             return null;
         }
-        final Object choiceOption = parameters.get(CHOICE_OPTION);
-        if (choiceOption == null || !(choiceOption instanceof Map)) {
+        Object choiceOption = parameters.get(CHOICE_OPTION);
+        if (choiceOption == null) {
+            choiceOption = Collections.emptyMap();
+        }
+        if (!(choiceOption instanceof Map)) {
             return null;
         }
         IBuildJobHandler buildHandler = new BuildJobHandler((ProcessItem) item, version.toString(), contextGroup.toString(),

@@ -14,6 +14,7 @@ package org.talend.designer.core.build;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,28 +27,31 @@ import org.talend.core.model.process.IProcess;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.properties.PropertiesFactory;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
+import org.talend.core.runtime.repository.build.IBuildExportHandler;
+import org.talend.core.runtime.repository.build.IBuildJobParameters;
 import org.talend.core.runtime.repository.build.IBuildParametes;
 import org.talend.core.runtime.repository.build.IBuildPomCreatorParameters;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
-import org.talend.core.runtime.repository.build.RepositoryObjectTypeBuildProvider;
 import org.talend.designer.core.IDesignerCoreService;
 import org.talend.designer.maven.tools.creator.CreateMavenJobPom;
 import org.talend.designer.runprocess.IProcessor;
 import org.talend.designer.runprocess.ProcessorUtilities;
 import org.talend.repository.RepositoryPlugin;
+import org.talend.repository.ui.wizards.exportjob.handler.BuildJobHandler;
+import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManagerFactory;
 
 /**
  * DOC ggu class global comment. Detailled comment
  */
 public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobBuildProviderTest {
 
-    class StandardJobStandaloneBuildProviderTestClass extends StandardJobStandaloneBuildProvider {
+    class RepositoryObjectTypeBuildProvider extends StandardJobStandaloneBuildProvider {
 
     }
 
     @Override
     protected RepositoryObjectTypeBuildProvider createTestBuildProvider() {
-        return new StandardJobStandaloneBuildProviderTestClass();
+        return new RepositoryObjectTypeBuildProvider();
     }
 
     @Test
@@ -60,7 +64,7 @@ public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobB
         parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
         // parameters.put(IBuildPomCreatorParameters.FILE_ASSEMBLY, null);
 
-        StandardJobStandaloneBuildProviderTestClass provider = new StandardJobStandaloneBuildProviderTestClass();
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
         Assert.assertNull(provider.createPomCreator(parameters));
     }
 
@@ -74,7 +78,7 @@ public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobB
         parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
         parameters.put(IBuildPomCreatorParameters.FILE_ASSEMBLY, new Object());
 
-        StandardJobStandaloneBuildProviderTestClass provider = new StandardJobStandaloneBuildProviderTestClass();
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
         Assert.assertNull(provider.createPomCreator(parameters));
     }
 
@@ -88,7 +92,7 @@ public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobB
         parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
         parameters.put(IBuildPomCreatorParameters.FILE_ASSEMBLY, talendProcessJavaProject.getProject().getFile("pom_abc.xml"));
 
-        StandardJobStandaloneBuildProviderTestClass provider = new StandardJobStandaloneBuildProviderTestClass();
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
         Assert.assertNull(provider.createPomCreator(parameters));
     }
 
@@ -103,7 +107,7 @@ public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobB
         parameters.put(IBuildPomCreatorParameters.FILE_ASSEMBLY, talendProcessJavaProject.getProject().getFile("pom_abc.xml"));
         parameters.put(IBuildPomCreatorParameters.CP_WIN, "");
 
-        StandardJobStandaloneBuildProviderTestClass provider = new StandardJobStandaloneBuildProviderTestClass();
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
         Assert.assertNull(provider.createPomCreator(parameters));
     }
 
@@ -173,4 +177,90 @@ public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobB
         Assert.assertTrue("the assembly file " + assemblyFile.getName() + " is not created ", assemblyFile.exists());
     }
 
+    @Test
+    public void test_createBuildExportHandler_emptyParameters() {
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(null));
+        Assert.assertNull(provider.createBuildExportHandler(Collections.emptyMap()));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nullItem() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("fakeKey", "fakeValue");
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nonItem() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, "fakeValue");
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createJobletProcessItem());
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nullVersion() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nullContextGroup() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
+        parameters.put(IBuildParametes.VERSION, "0.1");
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nonChoiceMap() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
+        parameters.put(IBuildParametes.VERSION, "0.1");
+        parameters.put(IBuildJobParameters.CONTEXT_GROUP, "Dev");
+        parameters.put(IBuildJobParameters.CHOICE_OPTION, "xxx");
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        Assert.assertNull(provider.createBuildExportHandler(parameters));
+    }
+
+    @Test
+    public void test_createBuildExportHandler_nullChoiceMap() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
+        parameters.put(IBuildParametes.VERSION, "0.1");
+        parameters.put(IBuildJobParameters.CONTEXT_GROUP, "Dev");
+        // parameters.put(IBuildJobParameters.CHOICE_OPTION, null);
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        final IBuildExportHandler buildExportHandler = provider.createBuildExportHandler(parameters);
+        Assert.assertNotNull(buildExportHandler);
+        Assert.assertEquals(BuildJobHandler.class, buildExportHandler.getClass());
+    }
+
+    @Test
+    public void test_createBuildExportHandler() {
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put(IBuildParametes.ITEM, PropertiesFactory.eINSTANCE.createProcessItem());
+        parameters.put(IBuildParametes.VERSION, "0.1");
+        parameters.put(IBuildJobParameters.CONTEXT_GROUP, "Dev");
+        parameters.put(IBuildJobParameters.CHOICE_OPTION, JobScriptsManagerFactory.getDefaultExportChoiceMap());
+
+        RepositoryObjectTypeBuildProvider provider = createTestBuildProvider();
+        final IBuildExportHandler buildExportHandler = provider.createBuildExportHandler(parameters);
+        Assert.assertNotNull(buildExportHandler);
+        Assert.assertEquals(BuildJobHandler.class, buildExportHandler.getClass());
+    }
 }
