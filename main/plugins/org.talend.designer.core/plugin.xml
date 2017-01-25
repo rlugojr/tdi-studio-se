@@ -861,5 +861,15 @@
                    order="10">
              </buildType>
           </buildProvider>
+          <buildProvider
+                description="Build OSGi bundle for Standard job"
+                id="build.provider.standard.job.osgibundle"
+                provider="org.talend.designer.core.build.StandardJobOSGiBundleBuildProvider">
+             <buildType
+                   label="%standard.job.osgi"
+                   name="OSGI"
+                   order="20">
+             </buildType>
+          </buildProvider>
        </extension>
 </plugin>
