@@ -1558,7 +1558,6 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
             	class LimitBytesHelper_<%=cid%>{
             		public void limitBytePart1(int batchSize_<%=cid%>,int batchSizeCounter_<%=cid%>,int insertedCount_<%=cid%>,
 					int updatedCount_<%=cid%>,int deletedCount_<%=cid%>,java.sql.PreparedStatement pstmt_<%=cid %>) throws Exception {
-            			if ((batchSize_<%=cid%> > 0) && (batchSize_<%=cid%> <= batchSizeCounter_<%=cid%>)) {
                 try {
 						int countSum_<%=cid%> = 0;
 						<%dbLog.batch().executeTry(dbLog.str(dataAction));%>
@@ -1582,7 +1581,7 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
             	    	    deletedCount_<%=cid%> += countSum_<%=cid%>;
             	    	<%
             	    	}%>
-            	    	batchSizeCounter_<%=cid%> = 0;
+            	    	
                 }catch (java.sql.BatchUpdateException e){
                 	<%if(("true").equals(dieOnError)) {
                 	%>
@@ -1614,13 +1613,12 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
                 	}
                 	%>
                			 }
-    				}
+    				
             			
             	}
             	
             	public void limitBytePart2(int batchSize_<%=cid%>,int batchSizeCounter_<%=cid%>,int insertedCount_<%=cid%>,
             								int updatedCount_<%=cid%>,int deletedCount_<%=cid%>,java.sql.PreparedStatement pstmt_<%=cid %>) throws Exception {
-            		if ((batchSize_<%=cid%> > 0) && (batchSizeCounter_<%=cid%> > 0)) {
                 try {
                 		int countSum_<%=cid%> = 0;
                 		<%dbLog.batch().executeTry(dbLog.str(dataAction));%>
@@ -1644,7 +1642,6 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
             	    	    deletedCount_<%=cid%> += countSum_<%=cid%>;
             	    	<%
             	    	}%>
-                batchSizeCounter_<%=cid%> = 0;
                 }catch (java.sql.BatchUpdateException e){
                 	<%if(("true").equals(dieOnError)) {
                 	%>
@@ -1676,14 +1673,16 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
                 	}
 					%>
                 		}		
-					}
             	}
             }
             <%
     	if (useBatch) {
     		%>
+    		if ((batchSize_<%=cid%> > 0) && (batchSize_<%=cid%> <= batchSizeCounter_<%=cid%>)) {
     			new LimitBytesHelper_<%=cid%>().limitBytePart1(batchSize_<%=cid%>,batchSizeCounter_<%=cid%>,insertedCount_<%=cid%>,
 																	updatedCount_<%=cid%>,deletedCount_<%=cid%>,pstmt_<%=cid %>);
+			    batchSizeCounter_<%=cid%> = 0;
+			}
     		<%
     		}
     		%>
@@ -1698,9 +1697,11 @@ if((cid.equals("talendLogs_DB") || cid.equals("talendStats_DB") || cid.equals("t
                 <%
                 if (useBatch) {
                 %>
-                
+                if ((batchSize_<%=cid%> > 0) && (batchSizeCounter_<%=cid%> > 0)) {
                 new LimitBytesHelper_<%=cid%>().limitBytePart2(batchSize_<%=cid%>,batchSizeCounter_<%=cid%>,insertedCount_<%=cid%>,
             														updatedCount_<%=cid%>,deletedCount_<%=cid%>,pstmt_<%=cid %>);
+            	batchSizeCounter_<%=cid%> = 0;
+            	}
         <%
         }
         %>
