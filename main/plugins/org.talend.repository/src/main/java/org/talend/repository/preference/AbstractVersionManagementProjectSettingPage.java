@@ -97,34 +97,6 @@ public abstract class AbstractVersionManagementProjectSettingPage extends Projec
 
     protected List<ItemVersionObject> checkedObjects = new ArrayList<ItemVersionObject>();
 
-    protected ICheckStateListener checkStateListener = new ICheckStateListener() {
-
-        @Override
-        public void checkStateChanged(CheckStateChangedEvent event) {
-            RepositoryNode node = (RepositoryNode) event.getElement();
-            List<ItemVersionObject> objects = new ArrayList<ItemVersionObject>();
-            processItems(objects, node);
-            if (!objects.isEmpty()) {
-                if (event.getChecked()) {
-                    checkedObjects.addAll(objects);
-                } else {
-                    checkedObjects.removeAll(objects);
-                    removeItemElements(objects);
-                }
-                // add fro bug TDI-22379
-                if (node != null && MavenVersionUtils.isVersioningType(node.getContentType())) {
-                    boolean isEnable = false;
-                    if (event.getChecked()) {
-                        isEnable = true;
-                    }
-                    checkButtonsState(isEnable);
-                }
-                researchMaxVersion();
-                refreshTableItems();
-            }
-        }
-    };
-
     @Override
     protected Control createContents(Composite parent) {
         Composite composite = new Composite(parent, 0);
@@ -176,7 +148,34 @@ public abstract class AbstractVersionManagementProjectSettingPage extends Projec
             }
         });
         // event
-        treeViewer.addCheckStateListener(checkStateListener);
+        treeViewer.addCheckStateListener(new ICheckStateListener() {
+
+            @Override
+            public void checkStateChanged(CheckStateChangedEvent event) {
+                RepositoryNode node = (RepositoryNode) event.getElement();
+                List<ItemVersionObject> objects = new ArrayList<ItemVersionObject>();
+                processItems(objects, node);
+                if (!objects.isEmpty()) {
+                    if (event.getChecked()) {
+                        checkedObjects.addAll(objects);
+                    } else {
+                        checkedObjects.removeAll(objects);
+                        removeItemElements(objects);
+                    }
+                    // add fro bug TDI-22379
+                    if (node != null && MavenVersionUtils.isVersioningType(node.getContentType())) {
+                        boolean isEnable = false;
+                        if (event.getChecked()) {
+                            isEnable = true;
+                        }
+                        checkButtonsState(isEnable);
+                    }
+                    researchMaxVersion();
+                    refreshTableItems();
+                }
+            }
+        });
+        
         treeViewer.addTreeListener(new ITreeViewerListener() {
 
             @Override
@@ -548,12 +547,10 @@ public abstract class AbstractVersionManagementProjectSettingPage extends Projec
 
         @Override
         public void run() {
-            treeViewer.removeCheckStateListener(checkStateListener);
-            treeViewer.setAllChecked(true);
-            treeViewer.addCheckStateListener(checkStateListener);
             checkedObjects.clear();
             checkedObjects.addAll(versionObjects);
             refreshTableItems();
+            refreshCheckedTreeView();
             checkButtonsState(true);
         }
 
