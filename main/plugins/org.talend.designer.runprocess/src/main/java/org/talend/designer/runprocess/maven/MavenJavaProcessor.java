@@ -36,6 +36,7 @@ import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.utils.JavaResourcesHelper;
 import org.talend.core.repository.utils.ItemResourceUtil;
+import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.process.TalendProcessOptionConstants;
@@ -237,7 +238,8 @@ public class MavenJavaProcessor extends JavaProcessor {
 
     protected IMavenPomCreator createMavenPomCreator() {
         final Property itemProperty = this.getProperty();
-        String buildTypeName = null; // PTODO
+        final Object exportType = itemProperty.getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
+        String buildTypeName = exportType != null ? exportType.toString() : ""; //$NON-NLS-1$
 
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put(IBuildParametes.ITEM, itemProperty.getItem());

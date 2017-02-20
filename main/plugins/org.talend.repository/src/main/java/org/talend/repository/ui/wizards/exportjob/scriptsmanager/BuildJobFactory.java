@@ -15,8 +15,8 @@ package org.talend.repository.ui.wizards.exportjob.scriptsmanager;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.emf.common.util.EMap;
 import org.talend.core.model.properties.ProcessItem;
+import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.IBuildJobHandler;
 import org.talend.core.runtime.repository.build.AbstractBuildProvider;
 import org.talend.core.runtime.repository.build.BuildExportManager;
@@ -61,8 +61,7 @@ public class BuildJobFactory {
             }
             buildType = newType;
         } else { // if null, will try to find the type from item for build type.
-            final EMap additionalProperties = processItem.getProperty().getAdditionalProperties();
-            final Object type = additionalProperties.get("<BuildTypeKey>"); // TODO
+            final Object type = processItem.getProperty().getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
             if (type != null) {
                 buildType = type.toString();
             }// else{ // if didn't set, should use default provider to create it.
