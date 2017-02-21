@@ -15,6 +15,7 @@ package org.talend.repository.ui.wizards.exportjob.scriptsmanager;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.IBuildJobHandler;
@@ -53,6 +54,19 @@ public class BuildJobFactory {
     public static IBuildJobHandler createBuildJobHandler(ProcessItem processItem, String contextName, String version,
             Map<ExportChoice, Object> exportChoiceMap, JobExportType jobExportType) {
 
+        if (jobExportType != null)
+            switch (jobExportType) {
+            case POJO:
+                break; // continue
+            case WSWAR:
+            case WSZIP:
+            case OSGI: // later, when osgi pom is finished, will try to enable it.
+                return null; // don't support others
+            default:
+                jobExportType = null; // try the first one by default
+                break;
+            }
+
         String buildType = null;
         if (jobExportType != null) {
             final String newType = oldBuildTypeMap.get(jobExportType);
@@ -60,7 +74,21 @@ public class BuildJobFactory {
                 return null;
             }
             buildType = newType;
-        } else { // if null, will try to find the type from item for build type.
+        }
+
+        IBuildJobHandler buildJobHandler = createBuildJobHandler(processItem, version, contextName, exportChoiceMap, buildType);
+        if (buildJobHandler == null) {
+            // default
+            buildJobHandler = new BuildJobHandler(processItem, version, contextName, exportChoiceMap);
+        }
+        return buildJobHandler;
+    }
+
+    public static IBuildJobHandler createBuildJobHandler(ProcessItem processItem, String contextName, String version,
+            Map<ExportChoice, Object> exportChoiceMap, String buildType) {
+
+        // if null, will try to find the type from item for build type.
+        if (StringUtils.isEmpty(buildType)) {
             final Object type = processItem.getProperty().getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
             if (type != null) {
                 buildType = type.toString();
@@ -81,8 +109,13 @@ public class BuildJobFactory {
             }
         }
 
-        // default
-        return new BuildJobHandler(processItem, version, contextName, exportChoiceMap);
+        return null;
+    }
+
+    public static IBuildJobHandler createBuildJobHandler(ProcessItem processItem, String contextName, String version,
+            Map<ExportChoice, Object> exportChoiceMap) {
+        // according to the export type from additional properties setting.
+        return createBuildJobHandler(processItem, version, contextName, exportChoiceMap, (String) null);
     }
 
 }

@@ -32,6 +32,7 @@ import org.talend.core.runtime.repository.build.IBuildJobParameters;
 import org.talend.core.runtime.repository.build.IBuildParametes;
 import org.talend.core.runtime.repository.build.IBuildPomCreatorParameters;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
+import org.talend.core.runtime.repository.build.RepositoryObjectTypeBuildProvider;
 import org.talend.designer.core.IDesignerCoreService;
 import org.talend.designer.maven.tools.creator.CreateMavenJobPom;
 import org.talend.designer.runprocess.IProcessor;
@@ -45,13 +46,9 @@ import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManag
  */
 public class StandardJobStandaloneBuildProviderTest extends AbstractStandardJobBuildProviderTest {
 
-    class RepositoryObjectTypeBuildProvider extends StandardJobStandaloneBuildProvider {
-
-    }
-
     @Override
     protected RepositoryObjectTypeBuildProvider createTestBuildProvider() {
-        return new RepositoryObjectTypeBuildProvider();
+        return new StandardJobStandaloneBuildProvider();
     }
 
     @Test

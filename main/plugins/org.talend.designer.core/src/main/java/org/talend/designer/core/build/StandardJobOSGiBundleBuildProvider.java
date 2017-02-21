@@ -22,6 +22,7 @@ import org.talend.core.model.properties.Item;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.repository.utils.ItemResourceUtil;
+import org.talend.core.runtime.repository.build.IBuildExportHandler;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
 import org.talend.core.runtime.repository.build.RepositoryObjectTypeBuildProvider;
 import org.talend.designer.maven.tools.creator.CreateMavenStandardJobOSGiPom;
@@ -82,6 +83,12 @@ public class StandardJobOSGiBundleBuildProvider extends RepositoryObjectTypeBuil
         }
 
         return osgiPomCreator;
+    }
+
+    @Override
+    public IBuildExportHandler createBuildExportHandler(Map<String, Object> parameters) {
+        // PTODO not impl yet.
+        return null;
     }
 
 }
