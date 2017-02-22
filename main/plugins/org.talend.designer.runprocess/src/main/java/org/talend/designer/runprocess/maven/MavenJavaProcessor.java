@@ -35,7 +35,6 @@ import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.utils.JavaResourcesHelper;
 import org.talend.core.repository.utils.ItemResourceUtil;
-import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.process.TalendProcessOptionConstants;
@@ -235,8 +234,10 @@ public class MavenJavaProcessor extends JavaProcessor {
     protected IMavenPomCreator createMavenPomCreator() {
         final Property itemProperty = this.getProperty();
         String buildTypeName = null;
+        // FIXME, better use the arguments directly for run/export/build/..., and remove this flag later.
         if (ProcessorUtilities.isExportConfig()) {
-            final Object exportType = itemProperty.getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
+            // final Object exportType = itemProperty.getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
+            final Object exportType = getArguments().get(TalendProcessArgumentConstant.ARG_BUILD_TYPE);
             buildTypeName = exportType != null ? exportType.toString() : ""; //$NON-NLS-1$
         } // else { //if run job, will be null (use Standalone by default)
 

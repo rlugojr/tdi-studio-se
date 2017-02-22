@@ -33,6 +33,7 @@ import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetWidgetFactory;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.runtime.maven.MavenConstants;
+import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.repository.build.BuildExportManager;
 import org.talend.core.runtime.repository.build.BuildType;
 import org.talend.core.runtime.repository.build.IBuildParametes;
@@ -56,7 +57,7 @@ public class DeploymentComposite extends AbstractTabComposite {
 
     private Label versionWarningLabel;
 
-    private ComboViewer exportTypeCombo;
+    private ComboViewer buildTypeCombo;
 
     private String defaultVersion;
 
@@ -137,15 +138,15 @@ public class DeploymentComposite extends AbstractTabComposite {
         data.top = new FormAttachment(versionLabel, 0, SWT.CENTER);
         versionCheckbox.setLayoutData(data);
 
-        exportTypeCombo = new ComboViewer(widgetFactory.createCCombo(composite));
+        buildTypeCombo = new ComboViewer(widgetFactory.createCCombo(composite));
         data = new FormData();
         data.left = new FormAttachment(0, SPACE_LABEL_TEXT);
         data.right = new FormAttachment(50, 0);
         data.top = new FormAttachment(versionText, ITabbedPropertyConstants.VSPACE);
-        final Control exportTypeControl = exportTypeCombo.getControl();
+        final Control exportTypeControl = buildTypeCombo.getControl();
         exportTypeControl.setLayoutData(data);
-        exportTypeCombo.setContentProvider(ArrayContentProvider.getInstance());
-        exportTypeCombo.setLabelProvider(new LabelProvider() {
+        buildTypeCombo.setContentProvider(ArrayContentProvider.getInstance());
+        buildTypeCombo.setLabelProvider(new LabelProvider() {
 
             @Override
             public String getText(Object element) {
@@ -157,7 +158,7 @@ public class DeploymentComposite extends AbstractTabComposite {
 
         });
 
-        Label exportTypeLabel = widgetFactory.createLabel(composite, Messages.getString("DeploymentComposite.exportTypeLabel")); //$NON-NLS-1$
+        Label exportTypeLabel = widgetFactory.createLabel(composite, Messages.getString("DeploymentComposite.buildTypeLabel")); //$NON-NLS-1$
         data = new FormData();
         data.left = new FormAttachment(0, SPACE_TO_LEFT);
         data.right = new FormAttachment(exportTypeControl, -ITabbedPropertyConstants.HSPACE);
@@ -192,17 +193,17 @@ public class DeploymentComposite extends AbstractTabComposite {
             Map<String, Object> parameters = new HashMap<String, Object>();
             parameters.put(IBuildParametes.PROCESS, this.process);
             final BuildType[] validBuildTypes = BuildExportManager.getInstance().getValidBuildTypes(parameters);
-            final Control exportTypeControl = exportTypeCombo.getControl();
+            final Control buildTypeControl = buildTypeCombo.getControl();
             if (validBuildTypes == null || validBuildTypes.length == 0) {
-                exportTypeControl.setEnabled(false);
+                buildTypeControl.setEnabled(false);
             } else {
-                exportTypeCombo.setInput(validBuildTypes);
-                exportTypeControl.setEnabled(true);
-                String exportType = (String) processAdditionalProperties.get(MavenConstants.NAME_EXPORT_TYPE);
+                buildTypeCombo.setInput(validBuildTypes);
+                buildTypeControl.setEnabled(true);
+                String buildType = (String) processAdditionalProperties.get(TalendProcessArgumentConstant.ARG_BUILD_TYPE);
                 BuildType foundType = null;
-                if (exportType != null) {
+                if (buildType != null) {
                     for (BuildType t : validBuildTypes) {
-                        if (t.getName().equals(exportType)) {
+                        if (t.getName().equals(buildType)) {
                             foundType = t;
                             break;
                         }
@@ -211,7 +212,7 @@ public class DeploymentComposite extends AbstractTabComposite {
                 if (foundType == null) {// set the first one by default
                     foundType = validBuildTypes[0];
                 }
-                exportTypeCombo.setSelection(new StructuredSelection(foundType));
+                buildTypeCombo.setSelection(new StructuredSelection(foundType));
             }
         }
     }
@@ -264,7 +265,7 @@ public class DeploymentComposite extends AbstractTabComposite {
 
         });
 
-        exportTypeCombo.addSelectionChangedListener(new ISelectionChangedListener() {
+        buildTypeCombo.addSelectionChangedListener(new ISelectionChangedListener() {
 
             @Override
             public void selectionChanged(SelectionChangedEvent event) {
@@ -272,8 +273,8 @@ public class DeploymentComposite extends AbstractTabComposite {
                 if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
                     final Object elem = ((IStructuredSelection) selection).getFirstElement();
                     if (elem instanceof BuildType) {
-                        Command cmd = new MavenDeploymentValueChangeCommand(process, MavenConstants.NAME_EXPORT_TYPE,
-                                ((BuildType) elem).getName());
+                        Command cmd = new MavenDeploymentValueChangeCommand(process,
+                                TalendProcessArgumentConstant.ARG_BUILD_TYPE, ((BuildType) elem).getName());
                         getCommandStack().execute(cmd);
                     }
                 }

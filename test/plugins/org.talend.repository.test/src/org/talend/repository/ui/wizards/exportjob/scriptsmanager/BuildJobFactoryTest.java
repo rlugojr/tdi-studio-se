@@ -21,8 +21,8 @@ import org.talend.core.context.RepositoryContext;
 import org.talend.core.model.properties.ProcessItem;
 import org.talend.core.model.properties.PropertiesFactory;
 import org.talend.core.model.properties.Property;
-import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.IBuildJobHandler;
+import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.repository.ui.wizards.exportjob.JavaJobScriptsExportWSWizardPage.JobExportType;
 import org.talend.repository.ui.wizards.exportjob.handler.BuildJobHandler;
 
@@ -125,7 +125,7 @@ public class BuildJobFactoryTest {
         property.setStatusCode(""); //$NON-NLS-1$
         ProcessItem processItem = PropertiesFactory.eINSTANCE.createProcessItem();
         processItem.setProperty(property);
-        property.getAdditionalProperties().put(MavenConstants.NAME_EXPORT_TYPE, "STANDALONE");
+        property.getAdditionalProperties().put(TalendProcessArgumentConstant.ARG_BUILD_TYPE, "STANDALONE");
 
         IBuildJobHandler handler = BuildJobFactory.createBuildJobHandler(processItem, "Default", property.getVersion(),
                 JobScriptsManagerFactory.getDefaultExportChoiceMap(), (String) null);
@@ -142,7 +142,7 @@ public class BuildJobFactoryTest {
         property.setStatusCode(""); //$NON-NLS-1$
         ProcessItem processItem = PropertiesFactory.eINSTANCE.createProcessItem();
         processItem.setProperty(property);
-        property.getAdditionalProperties().put(MavenConstants.NAME_EXPORT_TYPE, "OSGI");
+        property.getAdditionalProperties().put(TalendProcessArgumentConstant.ARG_BUILD_TYPE, "OSGI");
 
         IBuildJobHandler handler = BuildJobFactory.createBuildJobHandler(processItem, "Default", property.getVersion(),
                 JobScriptsManagerFactory.getDefaultExportChoiceMap(), (String) null);

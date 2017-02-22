@@ -17,8 +17,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.talend.core.model.properties.ProcessItem;
-import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.IBuildJobHandler;
+import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.core.runtime.repository.build.AbstractBuildProvider;
 import org.talend.core.runtime.repository.build.BuildExportManager;
 import org.talend.core.runtime.repository.build.IBuildExportHandler;
@@ -34,7 +34,7 @@ import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManag
  */
 public class BuildJobFactory {
 
-    private static final Map<JobExportType, String> oldBuildTypeMap = new HashMap<JobExportType, String>();
+    public static final Map<JobExportType, String> oldBuildTypeMap = new HashMap<JobExportType, String>();
     static {
         // from the extension point
         oldBuildTypeMap.put(JobExportType.POJO, "STANDALONE");
@@ -60,7 +60,7 @@ public class BuildJobFactory {
                 break; // continue
             case WSWAR:
             case WSZIP:
-            case OSGI: // later, when osgi pom is finished, will try to enable it.
+            case OSGI: // TODO, later, when osgi pom is finished, will try to enable it.
                 return null; // don't support others
             default:
                 jobExportType = null; // try the first one by default
@@ -89,7 +89,8 @@ public class BuildJobFactory {
 
         // if null, will try to find the type from item for build type.
         if (StringUtils.isEmpty(buildType)) {
-            final Object type = processItem.getProperty().getAdditionalProperties().get(MavenConstants.NAME_EXPORT_TYPE);
+            final Object type = processItem.getProperty().getAdditionalProperties()
+                    .get(TalendProcessArgumentConstant.ARG_BUILD_TYPE);
             if (type != null) {
                 buildType = type.toString();
             }// else{ // if didn't set, should use default provider to create it.
@@ -105,6 +106,10 @@ public class BuildJobFactory {
         if (buildProvider != null) {
             IBuildExportHandler buildExportHandler = buildProvider.createBuildExportHandler(parameters);
             if (buildExportHandler instanceof IBuildJobHandler) {
+                // if buildType is null, will get first one. so use exact provider one.
+                buildExportHandler.getArguments().put(TalendProcessArgumentConstant.ARG_BUILD_TYPE,
+                        buildProvider.getBuildType().getName());
+
                 return (IBuildJobHandler) buildExportHandler;
             }
         }
